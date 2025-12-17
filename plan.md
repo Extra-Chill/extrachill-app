@@ -1,6 +1,6 @@
 # extrachill-app — Implementation Plan
 
-**CURRENT STATUS**: Phase 6 complete. Expo + TypeScript app bootstrapped with working auth flow. Login tested successfully against production API. Bearer auth (`GET /auth/me`) and logout (`POST /auth/logout`) implemented and functional. Ready for feed implementation (Phase 3 emitters still pending for richer content).
+**CURRENT STATUS**: API foundations implemented in `extrachill-plugins/extrachill-api`. Token auth work is in progress in `extrachill-plugins/extrachill-users` (login + refresh implemented; the web login block now calls `/auth/login` via REST with `set_cookie=true`; bearer auth + logout + register still pending). This directory still contains only this plan + a placeholder `package.json` (no React Native app initialized yet).
 
 ## Vision
 Build a React Native mobile app for the entire Extra Chill multisite network.
@@ -16,7 +16,7 @@ Build a React Native mobile app for the entire Extra Chill multisite network.
 - **Everything is in the feed**: no premature curation rules. Filtering/tuning is a later UI concern.
 - **Single API base URL**: the app calls one host in production (`extrachill.com`).
 - **Authenticated-only app**: users must have an account; no logged-out browsing.
-- **No Blog 1 membership for normal users**: do not add community accounts to Blog ID 1. Blog ID 1 is for EC team members only.
+- **No Blog 1 membership for normal users**: do not add community accounts to Blog ID 1.
 - **Local build first**: run from simulator against the live WordPress site.
 
 ## Backend Architecture (WordPress)
@@ -139,10 +139,10 @@ All routes are under `extrachill/v1` and must work regardless of which multisite
   - Body: `refresh_token`, `device_id` (UUID v4, required)
   - Behavior: rotates refresh token and extends refresh expiry (sliding 30 days)
   - Returns: new `access_token` + new `refresh_token`
-- `POST /wp-json/extrachill/v1/auth/logout` (implemented)
+- `POST /wp-json/extrachill/v1/auth/logout` (planned)
   - Body: `device_id` (UUID v4, required)
   - Behavior: revokes that device session
-- `GET /wp-json/extrachill/v1/auth/me` (implemented)
+- `GET /wp-json/extrachill/v1/me` (planned)
   - Requires bearer token
   - Returns: current user payload used by the app
 
@@ -150,35 +150,15 @@ All routes are under `extrachill/v1` and must work regardless of which multisite
 Password reset remains **web-only** for now.
 - App links out to `https://community.extrachill.com/reset-password/`
 
-## Mobile App Architecture (Expo + React Native)
+## Mobile App Architecture (React Native)
+React Native implementation does not exist yet; this plan defines the minimum app surface once the API is stable.
 
-**Stack**: Expo SDK 54, TypeScript, Expo Router (file-based navigation), SecureStore for token persistence.
+Minimum screens:
+- Auth
+- Home: Activity feed (infinite scroll)
+- Detail: native detail screens hydrated via `GET /object`
 
-**Current screens**:
-- Login (`app/login.tsx`) - Username/email + password form
-- Feed (`app/feed.tsx`) - Placeholder showing "Welcome, {user}" after successful auth
-
-**Directory structure**:
-```
-extrachill-app/
-├── app/                    # Expo Router screens
-│   ├── _layout.tsx         # Root layout with AuthProvider
-│   ├── index.tsx           # Redirect based on auth state
-│   ├── login.tsx           # Login form
-│   └── feed.tsx            # Placeholder feed
-├── src/
-│   ├── api/client.ts       # API client (login, refresh, me, logout)
-│   ├── auth/
-│   │   ├── context.tsx     # AuthContext + useAuth hook
-│   │   └── storage.ts      # SecureStore helpers
-│   └── types/api.ts        # TypeScript interfaces
-```
-
-**Planned screens**:
-- Home: Activity feed (infinite scroll via `GET /activity`)
-- Detail: Native detail screens hydrated via `GET /object`
-
-**Caching**:
+Caching:
 - Cache hydrated objects client-side (keyed by `object_type:blog_id:id`).
 
 ## Milestones
@@ -198,17 +178,19 @@ extrachill-app/
 - Emit core post/comment events with `visibility=public`.
 - Restrict `visibility=private` feed access to admins.
 
-### Phase 2 — Token auth + web dogfooding (completed)
-Token endpoints implemented in `extrachill-plugins/extrachill-users`.
+### Phase 2 — Token auth + web dogfooding (in progress)
+Token endpoints are being implemented in `extrachill-plugins/extrachill-users` and then dogfooded from the existing Gutenberg login/register block.
 
 Implemented:
-- `POST /auth/login` - Web dogfooding via Gutenberg login block with `set_cookie=true`
-- `POST /auth/refresh` - Rotation + sliding expiry
-- `GET /auth/me` - Bearer token validation, returns user payload
-- `POST /auth/logout` - Revokes device session
+- `POST /auth/login`
+  - Web dogfooding: the existing login Gutenberg block now calls this endpoint via `fetch()` with `set_cookie=true`.
+- `POST /auth/refresh` (rotation + sliding expiry)
 
-Pending:
-- `POST /auth/register` - Needs Turnstile handling for mobile
+Next:
+- Bearer auth integration (`determine_current_user`) so access tokens authenticate requests
+- `GET /me`
+- `POST /auth/logout`
+- `POST /auth/register`
 
 Notes:
 - Web uses `set_cookie=true` to establish a normal WordPress browsing session.
@@ -231,12 +213,11 @@ Ensure the API supports app-driven creation flows across the ecosystem:
 - Device registration endpoint(s) (store push token per user/device).
 - Notification rules can be added later; the activity stream remains the source.
 
-### Phase 6 — Bootstrap the RN App (completed)
-- Initialized Expo + TypeScript project with expo-router
-- Connected to production API (`https://extrachill.com`)
-- Implemented Auth flow (login → feed)
-- Login tested successfully against production
-- Ready for feed implementation
+### Phase 6 — Bootstrap the RN App (local) (pending)
+- Initialize RN project.
+- Connect to local API base URL.
+- Implement Auth + Feed + Detail navigation.
+- Implement object hydration + caching.
 
 ## Acceptance Criteria (dev)
 - `POST /wp-json/extrachill/v1/auth/login` returns tokens for valid credentials with `device_id` (UUID v4 required).
