@@ -1,41 +1,67 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Build directories (created by build.sh scripts)
+build/
 
-# dependencies
+# Node modules
 node_modules/
 
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
+# Composer vendor directories
+vendor/
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
+# OS files
 .DS_Store
-*.pem
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# local env files
-.env*.local
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# typescript
-*.tsbuildinfo
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+error_log
+access_log
 
-# generated native folders
-/ios
-/android
+# Temporary files
+*.tmp
+*.temp
+*.backup
+*.bak
+
+# Cache directories
+.cache/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+# Documentation sync tracking
+docs/.docs-sync.json
+
+# ZIP archives (build outputs)
+*.zip
+*.tar.gz
+
+# WordPress uploads (if any)
+uploads/
+cache/
+
+# Additional build and development files
+composer.lock
+package-lock.json
+.claude/
+CLAUDE.md
+AGENTS.md
+.buildignore
+build.sh
