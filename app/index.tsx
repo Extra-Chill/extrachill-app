@@ -17,7 +17,7 @@ export default function Index() {
         if (isLoading) return;
 
         if (isAuthenticated) {
-            router.replace('/feed');
+            router.replace('/(drawer)/feed');
         } else {
             router.replace('/login');
         }

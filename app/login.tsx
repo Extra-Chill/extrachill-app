@@ -2,13 +2,14 @@
  * Login screen
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     KeyboardAvoidingView,
     Platform,
+    Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/auth/context';
@@ -17,8 +18,16 @@ import { Button, TextInput, Notice } from '../src/components';
 
 export default function Login() {
     const router = useRouter();
-    const { login } = useAuth();
-    const { colors, spacing, fontSize } = useTheme();
+    const { login, sessionExpired, clearSessionExpired } = useAuth();
+    const { colors, spacing, fontSize, fontFamily } = useTheme();
+
+    useEffect(() => {
+        return () => {
+            if (sessionExpired) {
+                clearSessionExpired();
+            }
+        };
+    }, [sessionExpired, clearSessionExpired]);
 
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
@@ -36,7 +45,7 @@ export default function Login() {
 
         try {
             await login(identifier.trim(), password);
-            router.replace('/feed');
+            router.replace('/(drawer)/feed');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Login failed');
         } finally {
@@ -50,22 +59,32 @@ export default function Login() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <View style={[styles.content, { paddingHorizontal: spacing.xl }]}>
-                <Text
-                    style={[
-                        styles.title,
-                        { color: colors.text, fontSize: fontSize['3xl'], marginBottom: spacing.sm },
-                    ]}
-                >
-                    Extra Chill
-                </Text>
+                <Image
+                    source={require('../assets/logo.png')}
+                    style={[styles.logo, { marginBottom: spacing.lg }]}
+                    resizeMode="contain"
+                />
                 <Text
                     style={[
                         styles.subtitle,
-                        { color: colors.muted, fontSize: fontSize.base, marginBottom: spacing.xl },
+                        { 
+                            color: colors.muted, 
+                            fontSize: fontSize.base, 
+                            marginBottom: spacing.xl,
+                            fontFamily: fontFamily.body,
+                        },
                     ]}
                 >
                     Sign in to continue
                 </Text>
+
+                {sessionExpired && (
+                    <Notice
+                        type="error"
+                        title="Session Expired"
+                        message="Please log in again."
+                    />
+                )}
 
                 {error && <Notice type="error" message={error} />}
 
@@ -111,9 +130,10 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
     },
-    title: {
-        fontWeight: '700',
-        textAlign: 'center',
+    logo: {
+        height: 90,
+        width: '100%',
+        alignSelf: 'center',
     },
     subtitle: {
         textAlign: 'center',

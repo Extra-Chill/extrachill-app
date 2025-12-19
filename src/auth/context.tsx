@@ -1,21 +1,24 @@
 /**
  * Auth context provider and useAuth hook
+ * 
+ * Manages user authentication state. Token management is delegated to the API client.
  */
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { User } from '../types/api';
+import type { AuthUser } from '../types/api';
 import { api } from '../api/client';
-import { getDeviceId, storeTokens, getTokens, clearTokens } from './storage';
 
 interface AuthState {
-    user: User | null;
+    user: AuthUser | null;
     isLoading: boolean;
     isAuthenticated: boolean;
+    sessionExpired: boolean;
 }
 
 interface AuthContextValue extends AuthState {
     login: (identifier: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    clearSessionExpired: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -25,60 +28,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: null,
         isLoading: true,
         isAuthenticated: false,
+        sessionExpired: false,
     });
 
-    const checkAuth = useCallback(async () => {
-        try {
-            const { accessToken } = await getTokens();
-
-            if (!accessToken) {
-                setState({ user: null, isLoading: false, isAuthenticated: false });
-                return;
-            }
-
-            const user = await api.getMe(accessToken);
-            setState({ user, isLoading: false, isAuthenticated: true });
-        } catch {
-            await clearTokens();
-            setState({ user: null, isLoading: false, isAuthenticated: false });
-        }
+    const handleAuthFailure = useCallback(() => {
+        setState({
+            user: null,
+            isLoading: false,
+            isAuthenticated: false,
+            sessionExpired: true,
+        });
     }, []);
+
+    const checkAuth = useCallback(async () => {
+        await api.initialize(handleAuthFailure);
+
+        if (!api.hasTokens()) {
+            setState({ user: null, isLoading: false, isAuthenticated: false, sessionExpired: false });
+            return;
+        }
+
+        try {
+            const user = await api.getMe();
+            setState({ user, isLoading: false, isAuthenticated: true, sessionExpired: false });
+        } catch {
+            setState({ user: null, isLoading: false, isAuthenticated: false, sessionExpired: false });
+        }
+    }, [handleAuthFailure]);
 
     useEffect(() => {
         checkAuth();
     }, [checkAuth]);
 
     const login = useCallback(async (identifier: string, password: string) => {
-        const deviceId = await getDeviceId();
-        const response = await api.login(identifier, password, deviceId);
-
-        await storeTokens(response.access_token, response.refresh_token);
+        const response = await api.login(identifier, password);
 
         setState({
             user: response.user,
             isLoading: false,
             isAuthenticated: true,
+            sessionExpired: false,
         });
     }, []);
 
     const logout = useCallback(async () => {
-        try {
-            const { accessToken } = await getTokens();
-            const deviceId = await getDeviceId();
+        await api.logout();
+        setState({ user: null, isLoading: false, isAuthenticated: false, sessionExpired: false });
+    }, []);
 
-            if (accessToken) {
-                await api.logout(accessToken, deviceId);
-            }
-        } catch {
-            // Ignore logout errors, clear tokens anyway
-        }
-
-        await clearTokens();
-        setState({ user: null, isLoading: false, isAuthenticated: false });
+    const clearSessionExpired = useCallback(() => {
+        setState(prev => ({ ...prev, sessionExpired: false }));
     }, []);
 
     return (
-        <AuthContext.Provider value={{ ...state, login, logout }}>
+        <AuthContext.Provider value={{ ...state, login, logout, clearSessionExpired }}>
             {children}
         </AuthContext.Provider>
     );

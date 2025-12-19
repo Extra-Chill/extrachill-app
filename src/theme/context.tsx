@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext } from 'react';
 import { useColorScheme } from 'react-native';
-import { colors, darkColors, spacing, borderRadius, fontSize, badgeColors } from '../root';
+import { colors, darkColors, spacing, borderRadius, fontSize, badgeColors, fontFamily } from '../root';
 
 type Colors = typeof colors;
 
@@ -13,6 +13,7 @@ interface Theme {
     spacing: typeof spacing;
     borderRadius: typeof borderRadius;
     fontSize: typeof fontSize;
+    fontFamily: typeof fontFamily;
     badgeColors: typeof badgeColors;
     isDark: boolean;
 }
@@ -28,6 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         spacing,
         borderRadius,
         fontSize,
+        fontFamily,
         badgeColors,
         isDark,
     };

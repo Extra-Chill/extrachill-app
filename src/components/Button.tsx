@@ -41,7 +41,7 @@ export function Button({
     disabled = false,
     loading = false,
 }: ButtonProps) {
-    const { colors, spacing, borderRadius, fontSize } = useTheme();
+    const { colors, spacing, borderRadius, fontSize, fontFamily } = useTheme();
 
     const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = {
         primary: {
@@ -136,6 +136,7 @@ export function Button({
                         styles.text,
                         variantStyles[variant].text,
                         sizeStyles[size].text,
+                        { fontFamily: fontFamily.body },
                     ]}
                 >
                     {children}

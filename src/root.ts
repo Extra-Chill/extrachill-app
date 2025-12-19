@@ -20,6 +20,7 @@ export const colors = {
     buttonText: '#fff',
     noticeBg: '#f8f9fa',
     noticeBorder: '#0b5394',
+    headerBackground: '#000',
 };
 
 export const darkColors = {
@@ -39,6 +40,7 @@ export const darkColors = {
     buttonText: '#fff',
     noticeBg: '#1e1e1e',
     noticeBorder: '#444',
+    headerBackground: '#000',
 };
 
 export const spacing = {
@@ -73,4 +75,10 @@ export const badgeColors = {
     artist: '#E21FC5',
     team: '#1fc5e2',
     professional: '#9D1FE2',
+};
+
+export const fontFamily = {
+    body: 'Helvetica',
+    heading: 'LoftSans',
+    brand: 'Lobster',
 };

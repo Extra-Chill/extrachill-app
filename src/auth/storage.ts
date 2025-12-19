@@ -8,6 +8,7 @@ import * as Crypto from 'expo-crypto';
 const KEYS = {
     ACCESS_TOKEN: 'access_token',
     REFRESH_TOKEN: 'refresh_token',
+    ACCESS_EXPIRY: 'access_expiry',
     DEVICE_ID: 'device_id',
 } as const;
 
@@ -22,25 +23,40 @@ export async function getDeviceId(): Promise<string> {
     return deviceId;
 }
 
-export async function storeTokens(accessToken: string, refreshToken: string): Promise<void> {
+export async function storeTokens(
+    accessToken: string,
+    refreshToken: string,
+    accessExpiresAt: number
+): Promise<void> {
     await Promise.all([
         SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, accessToken),
         SecureStore.setItemAsync(KEYS.REFRESH_TOKEN, refreshToken),
+        SecureStore.setItemAsync(KEYS.ACCESS_EXPIRY, accessExpiresAt.toString()),
     ]);
 }
 
-export async function getTokens(): Promise<{ accessToken: string | null; refreshToken: string | null }> {
-    const [accessToken, refreshToken] = await Promise.all([
+export interface StoredTokens {
+    accessToken: string | null;
+    refreshToken: string | null;
+    accessExpiresAt: number | null;
+}
+
+export async function getTokens(): Promise<StoredTokens> {
+    const [accessToken, refreshToken, accessExpiryStr] = await Promise.all([
         SecureStore.getItemAsync(KEYS.ACCESS_TOKEN),
         SecureStore.getItemAsync(KEYS.REFRESH_TOKEN),
+        SecureStore.getItemAsync(KEYS.ACCESS_EXPIRY),
     ]);
 
-    return { accessToken, refreshToken };
+    const accessExpiresAt = accessExpiryStr ? parseInt(accessExpiryStr, 10) : null;
+
+    return { accessToken, refreshToken, accessExpiresAt };
 }
 
 export async function clearTokens(): Promise<void> {
     await Promise.all([
         SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN),
         SecureStore.deleteItemAsync(KEYS.REFRESH_TOKEN),
+        SecureStore.deleteItemAsync(KEYS.ACCESS_EXPIRY),
     ]);
 }

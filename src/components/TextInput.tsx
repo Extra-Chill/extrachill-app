@@ -22,13 +22,13 @@ export function TextInput({
     error,
     ...props
 }: TextInputProps) {
-    const { colors, spacing, borderRadius, fontSize } = useTheme();
+    const { colors, spacing, borderRadius, fontSize, fontFamily } = useTheme();
     const [isFocused, setIsFocused] = useState(false);
 
     return (
         <View style={styles.container}>
             {label && (
-                <Text style={[styles.label, { color: colors.text, fontSize: fontSize.base }]}>
+                <Text style={[styles.label, { color: colors.text, fontSize: fontSize.base, fontFamily: fontFamily.body }]}>
                     {label}
                 </Text>
             )}
@@ -40,6 +40,7 @@ export function TextInput({
                         borderRadius: borderRadius.md,
                         paddingHorizontal: spacing.md,
                         fontSize: fontSize.base,
+                        fontFamily: fontFamily.body,
                         color: colors.text,
                         backgroundColor: colors.background,
                     },
