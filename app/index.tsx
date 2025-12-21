@@ -10,18 +10,22 @@ import { useTheme } from '../src/theme/context';
 
 export default function Index() {
     const router = useRouter();
-    const { isLoading, isAuthenticated } = useAuth();
+    const { isLoading, isAuthenticated, onboardingCompleted } = useAuth();
     const { colors } = useTheme();
 
     useEffect(() => {
         if (isLoading) return;
 
         if (isAuthenticated) {
-            router.replace('/(drawer)/feed');
+            if (onboardingCompleted) {
+                router.replace('/(drawer)/feed');
+            } else {
+                router.replace('/onboarding');
+            }
         } else {
             router.replace('/login');
         }
-    }, [isLoading, isAuthenticated, router]);
+    }, [isLoading, isAuthenticated, onboardingCompleted, router]);
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>

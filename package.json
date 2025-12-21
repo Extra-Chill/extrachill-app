@@ -1,6 +1,6 @@
 {
   "name": "extrachill-app",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@react-native-google-signin/google-signin": "^13.0.0",
     "@react-navigation/drawer": "^7.7.10",
     "babel-preset-expo": "~54.0.8",
     "expo": "~54.0.29",
@@ -26,6 +27,7 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
+    "react-native-svg": "15.12.1",
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {

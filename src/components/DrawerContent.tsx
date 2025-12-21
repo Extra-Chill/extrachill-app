@@ -2,12 +2,14 @@
  * Drawer content menu.
  */
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import * as Linking from 'expo-linking';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useTheme } from '../theme/context';
 import { useAuth } from '../auth/context';
+import { api } from '../api/client';
+import type { AvatarMenuItem } from '../types/api';
 import { Avatar } from './Avatar';
 
 interface DrawerItemProps {
@@ -43,7 +45,7 @@ export function DrawerContent(props: DrawerContentComponentProps) {
     const { colors, spacing, fontSize, fontFamily } = useTheme();
     const { user, logout } = useAuth();
 
-    const profileUrl = user?.profile_url;
+    const [menuItems, setMenuItems] = useState<AvatarMenuItem[] | null>(null);
 
     const openUrl = async (url: string) => {
         props.navigation.closeDrawer();
@@ -54,6 +56,60 @@ export function DrawerContent(props: DrawerContentComponentProps) {
         props.navigation.closeDrawer();
         await logout();
     };
+
+    useEffect(() => {
+        let didCancel = false;
+
+        async function loadMenu() {
+            try {
+                const response = await api.getAvatarMenu();
+                if (!didCancel) {
+                    setMenuItems(response.items);
+                }
+            } catch {
+                if (!didCancel) {
+                    setMenuItems([]);
+                }
+            }
+        }
+
+        if (user) {
+            loadMenu();
+        } else {
+            setMenuItems([]);
+        }
+
+        return () => {
+            didCancel = true;
+        };
+    }, [user]);
+
+    const extraDrawerItems = useMemo(() => {
+        if (!menuItems) {
+            return [];
+        }
+
+        const filtered = menuItems.filter((item) => {
+            const id = item.id?.toLowerCase?.() ?? '';
+            const label = item.label?.toLowerCase?.() ?? '';
+
+            if (id === 'logout' || label.includes('log out') || label.includes('logout')) {
+                return false;
+            }
+
+            if (id === 'view_profile' || label === 'view profile') {
+                return false;
+            }
+
+            if (id === 'settings' || label === 'settings') {
+                return false;
+            }
+
+            return Boolean(item.url && item.label);
+        });
+
+        return filtered.sort((a, b) => a.priority - b.priority);
+    }, [menuItems]);
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}> 
@@ -96,14 +152,23 @@ export function DrawerContent(props: DrawerContentComponentProps) {
                 <DrawerItem
                     label="View Profile"
                     onPress={() => {
-                        if (!profileUrl) return;
-                        openUrl(profileUrl);
+                        if (!user?.profile_url) return;
+                        openUrl(user.profile_url);
                     }}
                 />
                 <DrawerItem
                     label="Settings"
                     onPress={() => openUrl('https://community.extrachill.com/settings/')}
                 />
+
+                {extraDrawerItems.map((item) => (
+                    <DrawerItem
+                        key={`${item.id}:${item.url}`}
+                        label={item.label}
+                        danger={item.danger}
+                        onPress={() => openUrl(item.url)}
+                    />
+                ))}
             </View>
 
             <View style={{ marginTop: 'auto', paddingBottom: spacing.lg }}>

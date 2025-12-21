@@ -5,7 +5,7 @@
  * Uses a refresh lock to prevent thundering herd on concurrent 401s.
  */
 
-import type { LoginResponse, RefreshResponse, AuthMeResponse, ActivityResponse, ApiError } from '../types/api';
+import type { LoginResponse, RegisterResponse, RefreshResponse, AuthMeResponse, ActivityResponse, ApiError, OnboardingStatusResponse, OnboardingSubmitResponse, OAuthConfigResponse, GoogleLoginResponse, AvatarMenuResponse } from '../types/api';
 import { storeTokens, getTokens, clearTokens, getDeviceId, type StoredTokens } from '../auth/storage';
 
 const API_BASE = 'https://extrachill.com/wp-json/extrachill/v1';
@@ -15,6 +15,7 @@ interface RequestOptions {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
     body?: Record<string, unknown>;
     requiresAuth?: boolean;
+    headers?: Record<string, string>;
 }
 
 class ApiClient {
@@ -170,7 +171,7 @@ class ApiClient {
      * Make an API request with automatic auth handling.
      */
     private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-        const { method = 'GET', body, requiresAuth = true } = options;
+        const { method = 'GET', body, requiresAuth = true, headers: customHeaders } = options;
 
         // Ensure valid token for authenticated requests
         if (requiresAuth) {
@@ -182,6 +183,7 @@ class ApiClient {
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
+            ...customHeaders,
         };
 
         if (requiresAuth && this.accessToken) {
@@ -251,6 +253,32 @@ class ApiClient {
     }
 
     /**
+     * Register a new user and store tokens.
+     */
+    async register(email: string, password: string, passwordConfirm: string): Promise<RegisterResponse> {
+        const deviceId = await getDeviceId();
+        
+        const response = await this.request<RegisterResponse>('/auth/register', {
+            method: 'POST',
+            body: {
+                email,
+                password,
+                password_confirm: passwordConfirm,
+                device_id: deviceId,
+            },
+            requiresAuth: false,
+            headers: {
+                'ExtraChill-Client': 'app',
+            },
+        });
+
+        const expiresAt = Math.floor(new Date(response.access_expires_at).getTime() / 1000);
+        await this.setTokens(response.access_token, response.refresh_token, expiresAt);
+
+        return response;
+    }
+
+    /**
      * Logout and clear tokens.
      */
     async logout(): Promise<void> {
@@ -277,6 +305,13 @@ class ApiClient {
     }
 
     /**
+     * Get current user's avatar menu items.
+     */
+    async getAvatarMenu(): Promise<AvatarMenuResponse> {
+        return this.request<AvatarMenuResponse>('/users/me/avatar-menu');
+    }
+
+    /**
      * Get activity feed.
      */
     async getActivity(cursor?: string, limit = 20): Promise<ActivityResponse> {
@@ -285,6 +320,61 @@ class ApiClient {
         params.append('limit', limit.toString());
 
         return this.request<ActivityResponse>(`/activity?${params.toString()}`);
+    }
+
+    /**
+     * Get current user's onboarding status.
+     */
+    async getOnboardingStatus(): Promise<OnboardingStatusResponse> {
+        return this.request<OnboardingStatusResponse>('/users/onboarding');
+    }
+
+    /**
+     * Complete onboarding with username and preferences.
+     */
+    async submitOnboarding(
+        username: string,
+        userIsArtist: boolean,
+        userIsProfessional: boolean
+    ): Promise<OnboardingSubmitResponse> {
+        return this.request<OnboardingSubmitResponse>('/users/onboarding', {
+            method: 'POST',
+            body: {
+                username,
+                user_is_artist: userIsArtist,
+                user_is_professional: userIsProfessional,
+            },
+        });
+    }
+
+    /**
+     * Get OAuth configuration from server.
+     */
+    async getOAuthConfig(): Promise<OAuthConfigResponse> {
+        return this.request<OAuthConfigResponse>('/config/oauth', {
+            requiresAuth: false,
+        });
+    }
+
+    /**
+     * Login with Google ID token and store tokens.
+     */
+    async loginWithGoogle(idToken: string): Promise<GoogleLoginResponse> {
+        const deviceId = await getDeviceId();
+        
+        const response = await this.request<GoogleLoginResponse>('/auth/google', {
+            method: 'POST',
+            body: {
+                id_token: idToken,
+                device_id: deviceId,
+            },
+            requiresAuth: false,
+        });
+
+        const expiresAt = Math.floor(new Date(response.access_expires_at).getTime() / 1000);
+        await this.setTokens(response.access_token, response.refresh_token, expiresAt);
+
+        return response;
     }
 }
 

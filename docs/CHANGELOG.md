@@ -4,6 +4,51 @@ All notable changes to the Extra Chill mobile app will be documented in this fil
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-12-20
+
+### Added
+
+- User registration flow with email and password validation
+  - New `/auth/register` endpoint integration
+  - Password confirmation validation (minimum 8 characters)
+  - Email format validation
+- OAuth2 Google Sign-In support with lazy-loaded native module
+  - New `/auth/google` endpoint for OAuth token exchange
+  - New `/config/oauth` endpoint for OAuth configuration retrieval
+  - Graceful fallback when native module unavailable (Expo Go)
+  - Support for iOS and web client IDs
+- Post-registration onboarding screen (`app/onboarding.tsx`)
+  - Username selection with validation (3-60 characters, alphanumeric + hyphens/underscores)
+  - User preference flags (musician/professional options)
+  - Onboarding status persistence via `/users/onboarding` endpoint
+- New API endpoints:
+  - `/auth/register` - User registration with device tracking
+  - `/auth/google` - OAuth token exchange and auto-login
+  - `/config/oauth` - OAuth provider configuration
+  - `/users/onboarding` - Get and submit onboarding status
+  - `/users/me/avatar-menu` - User avatar menu items
+- `GoogleSignInButton` component for consistent OAuth UI
+- `Checkbox` component with disabled state support
+- New API response types: `RegisterResponse`, `GoogleLoginResponse`, `OnboardingStatusResponse`, `OnboardingSubmitResponse`, `OAuthConfigResponse`, `AvatarMenuResponse`
+
+### Changed
+
+- Login screen refactored as unified auth screen supporting both login and registration modes
+  - Mode toggle between "Sign In" and "Create Account"
+  - Conditional form fields (password confirm only in registration mode)
+  - Dynamic button labels based on active mode
+  - Improved visual feedback with divider between email/password and OAuth options
+- Auth context expanded with new state fields: `onboardingCompleted`, `googleEnabled`
+- Auth context expanded with new methods: `register()`, `loginWithGoogle()`, `completeOnboarding()`
+- Login/registration redirects now check onboarding status and route to `/onboarding` if not completed
+- Index route logic updated to route authenticated users to `/onboarding` if onboarding incomplete
+- API client enhanced with centralized OAuth configuration management and device ID integration for registration/OAuth flows
+- API types expanded with comprehensive metadata support for activity items (event data, reply data)
+
+### Removed
+
+- N/A
+
 ## [0.2.0] - 2025-12-19
 
 ### Added
