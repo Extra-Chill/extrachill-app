@@ -5,7 +5,7 @@
  * Uses a refresh lock to prevent thundering herd on concurrent 401s.
  */
 
-import type { LoginResponse, RegisterResponse, RefreshResponse, AuthMeResponse, ActivityResponse, ApiError, OnboardingStatusResponse, OnboardingSubmitResponse, OAuthConfigResponse, GoogleLoginResponse, AvatarMenuResponse } from '../types/api';
+import type { LoginResponse, RegisterResponse, RefreshResponse, BrowserHandoffResponse, AuthMeResponse, ActivityResponse, ApiError, OnboardingStatusResponse, OnboardingSubmitResponse, OAuthConfigResponse, GoogleLoginResponse } from '../types/api';
 import { storeTokens, getTokens, clearTokens, getDeviceId, type StoredTokens } from '../auth/storage';
 
 const API_BASE = 'https://extrachill.com/wp-json/extrachill/v1';
@@ -265,6 +265,8 @@ class ApiClient {
                 password,
                 password_confirm: passwordConfirm,
                 device_id: deviceId,
+                registration_source: 'extrachill-app',
+                registration_method: 'standard',
             },
             requiresAuth: false,
             headers: {
@@ -298,18 +300,26 @@ class ApiClient {
     }
 
     /**
+     * Create a one-time URL to log into the website.
+     */
+    async createBrowserHandoffUrl(redirectUrl: string): Promise<string> {
+        const response = await this.request<BrowserHandoffResponse>('/auth/browser-handoff', {
+            method: 'POST',
+            body: {
+                redirect_url: redirectUrl,
+            },
+        });
+
+        return response.handoff_url;
+    }
+
+    /**
      * Get current user info.
      */
     async getMe(): Promise<AuthMeResponse> {
         return this.request<AuthMeResponse>('/auth/me');
     }
 
-    /**
-     * Get current user's avatar menu items.
-     */
-    async getAvatarMenu(): Promise<AvatarMenuResponse> {
-        return this.request<AvatarMenuResponse>('/users/me/avatar-menu');
-    }
 
     /**
      * Get activity feed.
@@ -367,6 +377,8 @@ class ApiClient {
             body: {
                 id_token: idToken,
                 device_id: deviceId,
+                registration_source: 'extrachill-app',
+                registration_method: 'google',
             },
             requiresAuth: false,
         });

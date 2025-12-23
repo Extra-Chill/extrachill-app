@@ -69,21 +69,25 @@ export interface RefreshResponse {
     user: AuthUser;
 }
 
+export interface BrowserHandoffResponse {
+    handoff_url: string;
+}
+
 export interface AuthMeResponse extends AuthUser {
     email: string;
     registered: string;
-}
 
-export interface AvatarMenuItem {
-    id: string;
-    label: string;
-    url: string;
-    priority: number;
-    danger: boolean;
-}
-
-export interface AvatarMenuResponse {
-    items: AvatarMenuItem[];
+    artist_ids?: number[];
+    latest_artist_id?: number;
+    link_page_count?: number;
+    can_manage_shop?: boolean;
+    shop_product_count?: number;
+    can_create_artists?: boolean;
+    site_urls?: {
+        community: string;
+        artist: string;
+        shop: string;
+    };
 }
 
 export interface ApiError {
@@ -114,10 +118,21 @@ export interface ActivityCardData {
     parent_topic_title?: string;
 }
 
+export interface ActivityTaxonomyTerm {
+    id: number;
+    slug: string;
+    name: string;
+    badge?: {
+        background_color: string;
+        text_color: string;
+    };
+}
+
 export interface ActivityItemData {
     post_type?: string;
     post_id?: number;
     card?: ActivityCardData;
+    taxonomies?: Record<string, ActivityTaxonomyTerm[]> | null;
 }
 
 export interface ActivityItem {

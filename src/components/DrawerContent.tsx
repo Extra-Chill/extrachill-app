@@ -2,14 +2,14 @@
  * Drawer content menu.
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import * as Linking from 'expo-linking';
+import { api } from '../api/client';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useTheme } from '../theme/context';
 import { useAuth } from '../auth/context';
-import { api } from '../api/client';
-import type { AvatarMenuItem } from '../types/api';
+
 import { Avatar } from './Avatar';
 
 interface DrawerItemProps {
@@ -43,12 +43,28 @@ function DrawerItem({ label, onPress, danger = false }: DrawerItemProps) {
 
 export function DrawerContent(props: DrawerContentComponentProps) {
     const { colors, spacing, fontSize, fontFamily } = useTheme();
-    const { user, logout } = useAuth();
+    const { user, logout, isAuthenticated } = useAuth();
 
-    const [menuItems, setMenuItems] = useState<AvatarMenuItem[] | null>(null);
+    const siteUrls = user?.site_urls;
 
     const openUrl = async (url: string) => {
         props.navigation.closeDrawer();
+
+        try {
+            const { hostname } = Linking.parse(url);
+            const host = hostname ? hostname.toLowerCase() : '';
+            const isExtrachillCom = host === 'extrachill.com' || host.endsWith('.extrachill.com');
+            const isExtrachillLink = host.includes('extrachill.link');
+
+            if (isAuthenticated && isExtrachillCom && !isExtrachillLink) {
+                const handoffUrl = await api.createBrowserHandoffUrl(url);
+                await Linking.openURL(handoffUrl);
+                return;
+            }
+        } catch {
+            // Fall through to direct open.
+        }
+
         await Linking.openURL(url);
     };
 
@@ -57,59 +73,6 @@ export function DrawerContent(props: DrawerContentComponentProps) {
         await logout();
     };
 
-    useEffect(() => {
-        let didCancel = false;
-
-        async function loadMenu() {
-            try {
-                const response = await api.getAvatarMenu();
-                if (!didCancel) {
-                    setMenuItems(response.items);
-                }
-            } catch {
-                if (!didCancel) {
-                    setMenuItems([]);
-                }
-            }
-        }
-
-        if (user) {
-            loadMenu();
-        } else {
-            setMenuItems([]);
-        }
-
-        return () => {
-            didCancel = true;
-        };
-    }, [user]);
-
-    const extraDrawerItems = useMemo(() => {
-        if (!menuItems) {
-            return [];
-        }
-
-        const filtered = menuItems.filter((item) => {
-            const id = item.id?.toLowerCase?.() ?? '';
-            const label = item.label?.toLowerCase?.() ?? '';
-
-            if (id === 'logout' || label.includes('log out') || label.includes('logout')) {
-                return false;
-            }
-
-            if (id === 'view_profile' || label === 'view profile') {
-                return false;
-            }
-
-            if (id === 'settings' || label === 'settings') {
-                return false;
-            }
-
-            return Boolean(item.url && item.label);
-        });
-
-        return filtered.sort((a, b) => a.priority - b.priority);
-    }, [menuItems]);
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}> 
@@ -156,19 +119,47 @@ export function DrawerContent(props: DrawerContentComponentProps) {
                         openUrl(user.profile_url);
                     }}
                 />
-                <DrawerItem
-                    label="Settings"
-                    onPress={() => openUrl('https://community.extrachill.com/settings/')}
-                />
+                {siteUrls?.artist && user?.artist_ids && user.artist_ids.length > 0 ? (
+                    <>
+                        <DrawerItem
+                            label={user.artist_ids.length === 1 ? 'Manage Artist' : 'Manage Artists'}
+                            onPress={() => openUrl(`${siteUrls.artist}/manage-artist/`)}
+                        />
 
-                {extraDrawerItems.map((item) => (
+                        {typeof user.link_page_count === 'number' ? (
+                            <DrawerItem
+                                label={user.link_page_count === 0
+                                    ? 'Create Link Page'
+                                    : user.link_page_count === 1
+                                        ? 'Manage Link Page'
+                                        : 'Manage Link Pages'}
+                                onPress={() => openUrl(`${siteUrls.artist}/manage-link-page/`)}
+                            />
+                        ) : null}
+
+                        {user.can_manage_shop ? (
+                            <DrawerItem
+                                label={user.shop_product_count && user.shop_product_count > 0
+                                    ? 'Manage Shop'
+                                    : 'Create Shop'}
+                                onPress={() => openUrl(`${siteUrls.artist}/manage-shop/`)}
+                            />
+                        ) : null}
+                    </>
+                ) : siteUrls?.artist && user?.can_create_artists ? (
                     <DrawerItem
-                        key={`${item.id}:${item.url}`}
-                        label={item.label}
-                        danger={item.danger}
-                        onPress={() => openUrl(item.url)}
+                        label="Create Artist Profile"
+                        onPress={() => openUrl(`${siteUrls.artist}/create-artist/`)}
                     />
-                ))}
+                ) : null}
+
+
+                {siteUrls?.community ? (
+                    <DrawerItem
+                        label="Settings"
+                        onPress={() => openUrl(`${siteUrls.community}/settings/`)}
+                    />
+                ) : null}
             </View>
 
             <View style={{ marginTop: 'auto', paddingBottom: spacing.lg }}>

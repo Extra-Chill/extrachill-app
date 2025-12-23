@@ -87,13 +87,41 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
     const excerpt = card?.excerpt;
     const displayExcerpt = excerpt ? truncateExcerpt(excerpt) : null;
 
-    const eventMeta =
-        postType === 'datamachine_events' && card ? formatEventMeta(card) : null;
+    const eventMeta = card ? formatEventMeta(card) : null;
 
     const replyContext =
         postType === 'reply' && card?.parent_topic_title
             ? `Replied to: ${card.parent_topic_title}`
             : null;
+
+    const allTaxonomyTerms = item.data?.taxonomies
+        ? Object.entries(item.data.taxonomies)
+              .filter(([, terms]) => Array.isArray(terms) && terms.length > 0)
+              .flatMap(([taxonomy, terms]) =>
+                  terms.map((term) => ({ taxonomy, term }))
+              )
+        : [];
+
+    const TAXONOMY_PRIORITY: Record<string, number> = {
+        location: 1,
+        festival: 2,
+        venue: 3,
+        category: 4,
+        post_tag: 5,
+        artist: 6,
+        promoter: 7,
+    };
+
+    allTaxonomyTerms.sort((a, b) => {
+        const priorityA = TAXONOMY_PRIORITY[a.taxonomy] ?? 100;
+        const priorityB = TAXONOMY_PRIORITY[b.taxonomy] ?? 100;
+
+        if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+        }
+
+        return a.term.name.localeCompare(b.term.name);
+    });
 
     return (
         <TouchableOpacity
@@ -112,26 +140,66 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
         >
             <View
                 style={[
-                    styles.badge,
+                    styles.badgeRow,
                     {
-                        backgroundColor: colors.muted + '20',
-                        borderRadius: borderRadius.sm,
                         marginBottom: spacing.sm,
+                        gap: spacing.xs,
                     },
                 ]}
             >
-                <Text
+                <View
                     style={[
-                        styles.badgeText,
+                        styles.badge,
                         {
-                            color: colors.muted,
-                            fontSize: fontSize.xs,
-                            fontFamily: fontFamily.body,
+                            backgroundColor: colors.muted + '20',
+                            borderRadius: borderRadius.sm,
                         },
                     ]}
                 >
-                    {getPostTypeLabel(postType)}
-                </Text>
+                    <Text
+                        style={[
+                            styles.badgeText,
+                            {
+                                color: colors.muted,
+                                fontSize: fontSize.xs,
+                                fontFamily: fontFamily.body,
+                            },
+                        ]}
+                    >
+                        {getPostTypeLabel(postType)}
+                    </Text>
+                </View>
+
+                {allTaxonomyTerms.map(({ taxonomy, term }) => {
+                    const backgroundColor = term.badge?.background_color ?? colors.muted + '20';
+                    const textColor = term.badge?.text_color ?? colors.muted;
+
+                    return (
+                        <View
+                            key={`${taxonomy}:${term.id}`}
+                            style={[
+                                styles.badge,
+                                {
+                                    backgroundColor,
+                                    borderRadius: borderRadius.sm,
+                                },
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    styles.taxonomyBadgeText,
+                                    {
+                                        color: textColor,
+                                        fontSize: fontSize.xs,
+                                        fontFamily: fontFamily.body,
+                                    },
+                                ]}
+                            >
+                                {term.name}
+                            </Text>
+                        </View>
+                    );
+                })}
             </View>
 
             <View style={styles.header}>
@@ -200,6 +268,11 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
 
 const styles = StyleSheet.create({
     container: {},
+    badgeRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+    },
     badge: {
         alignSelf: 'flex-start',
         paddingHorizontal: 8,
@@ -209,6 +282,9 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         textTransform: 'uppercase',
         letterSpacing: 0.5,
+    },
+    taxonomyBadgeText: {
+        fontWeight: '500',
     },
     header: {
         flexDirection: 'row',

@@ -4,6 +4,63 @@ All notable changes to the Extra Chill mobile app will be documented in this fil
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-12-22
+
+### Added
+
+- Browser session handoff for seamless transitions between mobile app and web interface
+  - New `/auth/browser-handoff` endpoint integration for authenticated one-time URLs
+  - Automatic handoff for extrachill.com links when user is authenticated
+  - Graceful fallback to direct link opening on errors
+- Taxonomy badges display in activity feed cards
+  - Priority-based ordering (location, festival, venue, category, tags, artist, promoter)
+  - Custom badge colors from API (background and text)
+  - Display alongside post type badges
+- User capability-based drawer navigation
+  - Conditional menu items based on user permissions
+  - Artist profile management (create, single, or multiple artists)
+  - Link page management (create, single, or multiple pages)
+  - Shop management (create or manage products)
+  - Settings link to community site
+- Extended user data model in `/auth/me` endpoint
+  - `artist_ids`: Array of managed artist profile IDs
+  - `latest_artist_id`: Most recently managed artist ID
+  - `link_page_count`: Number of link pages owned by user
+  - `can_manage_shop`: Shop management permission flag
+  - `shop_product_count`: Number of shop products owned
+  - `can_create_artists`: Artist profile creation permission flag
+  - `site_urls`: Object with site URLs (community, artist, shop)
+- Registration metadata tracking
+  - `registration_source`: App identifier (e.g., 'extrachill-app')
+  - `registration_method`: Auth method (e.g., 'standard', 'google')
+  - Applied to both standard registration and Google OAuth flows
+- New API response types: `BrowserHandoffResponse`, `ActivityTaxonomyTerm`
+- Enhanced `AuthMeResponse` interface with extended user capability flags
+- Extended `ActivityItemData` with `taxonomies` field for badge rendering
+
+### Changed
+
+- Auth context now calls `api.getMe()` explicitly after login, registration, and Google sign-in
+  - Ensures complete user data (including capabilities) is loaded immediately
+  - Replaced direct use of user data from login/register responses
+- Drawer content refactored from dynamic API-driven menu to static capability-based navigation
+  - Removed dependency on `/users/me/avatar-menu` endpoint
+  - Removed `AvatarMenuItem` and `AvatarMenuResponse` types
+  - Simplified component by removing state management and effects
+- API client `register()` method now includes registration metadata
+- Activity card event metadata formatting now applies to all post types (previously only events)
+- Documentation reorganization across AGENTS.md, README.md, and plan.md
+  - Improved API integration documentation
+  - Updated implementation status to reflect completed features
+  - Enhanced project structure descriptions
+
+### Removed
+
+- `AvatarMenuItem` and `AvatarMenuResponse` type definitions
+- `getAvatarMenu()` API client method
+- Dynamic menu fetching and state management from DrawerContent component
+- Outdated endpoint reference in CHANGELOG (`/users/me/avatar-menu`)
+
 ## [0.3.0] - 2025-12-20
 
 ### Added
@@ -26,10 +83,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - `/auth/google` - OAuth token exchange and auto-login
   - `/config/oauth` - OAuth provider configuration
   - `/users/onboarding` - Get and submit onboarding status
-  - `/users/me/avatar-menu` - User avatar menu items
+  - `/auth/me` extended user navigation context (artist IDs, link page count, site URLs)
 - `GoogleSignInButton` component for consistent OAuth UI
 - `Checkbox` component with disabled state support
-- New API response types: `RegisterResponse`, `GoogleLoginResponse`, `OnboardingStatusResponse`, `OnboardingSubmitResponse`, `OAuthConfigResponse`, `AvatarMenuResponse`
+- New API response types: `RegisterResponse`, `GoogleLoginResponse`, `OnboardingStatusResponse`, `OnboardingSubmitResponse`, `OAuthConfigResponse`
 
 ### Changed
 

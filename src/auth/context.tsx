@@ -8,14 +8,14 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
-import type { AuthUser, OAuthConfigResponse } from '../types/api';
+import type { AuthMeResponse, OAuthConfigResponse } from '../types/api';
 import { api } from '../api/client';
 
 let googleSignInModule: typeof import('@react-native-google-signin/google-signin') | null = null;
 let oauthConfigCache: OAuthConfigResponse | null = null;
 
 interface AuthState {
-    user: AuthUser | null;
+    user: AuthMeResponse | null;
     isLoading: boolean;
     isAuthenticated: boolean;
     sessionExpired: boolean;
@@ -132,12 +132,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [checkAuth]);
 
     const login = useCallback(async (identifier: string, password: string) => {
-        const response = await api.login(identifier, password);
-        const onboardingStatus = await api.getOnboardingStatus();
+        await api.login(identifier, password);
+
+        const [me, onboardingStatus] = await Promise.all([
+            api.getMe(),
+            api.getOnboardingStatus(),
+        ]);
 
         setState(prev => ({
             ...prev,
-            user: response.user,
+            user: me,
             isLoading: false,
             isAuthenticated: true,
             sessionExpired: false,
@@ -147,10 +151,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const register = useCallback(async (email: string, password: string, passwordConfirm: string) => {
         const response = await api.register(email, password, passwordConfirm);
+        const me = await api.getMe();
 
         setState(prev => ({
             ...prev,
-            user: response.user,
+            user: me,
             isLoading: false,
             isAuthenticated: true,
             sessionExpired: false,
@@ -183,12 +188,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 throw new Error('No ID token received from Google');
             }
 
-            const loginResponse = await api.loginWithGoogle(idToken);
-            const onboardingStatus = await api.getOnboardingStatus();
+            await api.loginWithGoogle(idToken);
+
+            const [me, onboardingStatus] = await Promise.all([
+                api.getMe(),
+                api.getOnboardingStatus(),
+            ]);
 
             setState(prev => ({
                 ...prev,
-                user: loginResponse.user,
+                user: me,
                 isLoading: false,
                 isAuthenticated: true,
                 sessionExpired: false,
