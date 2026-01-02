@@ -1,93 +1,65 @@
 # Extra Chill Mobile App
 
-React Native mobile application for the Extra Chill music community platform with Expo Router navigation and JWT authentication.
+React Native mobile application for the Extra Chill music community platform with Expo Router navigation and token-based authentication.
 
-## Requirements
+## Commands
 
-- Node.js 18+
-- Xcode 15+ (for iOS development)
-- Android Studio (for Android development)
-- Expo CLI (EAS Build for production)
-
-## Setup
-
-```bash
-npm install
-npm start
-```
-
-## Development
-
-```bash
-# Start Expo dev server
-npm start
-
-# Run on iOS Simulator
-npm run ios
-
-# Run on Android Emulator
-npm run android
-
-# Type checking (strict)
-npx tsc -p tsconfig.json --noEmit
-```
+- Dev server: `npm start`
+- Run: `npm run ios` / `npm run android` / `npm run web`
+- Type check: `npx tsc -p tsconfig.json --noEmit`
 
 ## Project Structure
 
 ```
 extrachill-app/
-├── app/                    # Expo Router file-based routing
-│   ├── _layout.tsx         # Root layout with AuthProvider
-│   ├── index.tsx           # Auth state redirect
-│   ├── login.tsx           # Login form
-│   └── feed.tsx            # Activity feed
+├── app/                       # Expo Router routes
+│   ├── _layout.tsx
+│   ├── index.tsx
+│   ├── login.tsx
+│   ├── onboarding.tsx
+│   └── (drawer)/
+│       ├── _layout.tsx
+│       └── feed.tsx
 ├── src/
-│   ├── api/
-│   │   └── client.ts       # API client configuration
-│   ├── auth/
-│   │   ├── context.tsx     # Auth context + useAuth hook
-│   │   └── storage.ts      # SecureStore token management
-│   └── types/
-│       └── api.ts          # TypeScript type definitions
-├── assets/                 # App icons and splash screen
-└── docs/
-    └── CHANGELOG.md        # Version history
+│   ├── api/client.ts          # API client + token refresh
+│   ├── auth/                  # Auth context + SecureStore
+│   ├── components/            # UI components (ActivityCard, DrawerContent, etc.)
+│   ├── theme/                 # Theme tokens + context
+│   ├── utils/
+│   └── types/api.ts           # API response types
+├── assets/
+└── docs/CHANGELOG.md
 ```
 
 ## API Integration
 
-The mobile app consumes the [ExtraChill REST API](../extrachill-plugins/extrachill-api/) at `https://extrachill.com/wp-json/extrachill/v1`.
+The app calls the Extra Chill REST API at `https://extrachill.com/wp-json/extrachill/v1` (see `src/api/client.ts`).
 
-### Auth Endpoints
+### Auth endpoints used
 
-| Endpoint | Description | Auth Required |
-|----------|-------------|---------------|
-| `POST /auth/login` | Authenticate with username/email + password | No |
-| `POST /auth/refresh` | Rotate access token using refresh token | No |
-| `GET /auth/me` | Get current authenticated user | Yes |
-| `POST /auth/logout` | Revoke device session | Yes |
+- `POST /auth/login` (requires `device_id`)
+- `POST /auth/register` (requires `device_id`; includes `registration_source`/`registration_method`)
+- `POST /auth/refresh` (requires `device_id`)
+- `POST /auth/logout` (requires `device_id`)
+- `GET /auth/me`
+- `POST /auth/google` (requires `device_id`)
+- `GET /config/oauth`
+- `GET`/`POST /users/onboarding`
+- `POST /auth/browser-handoff` (creates one-time web session handoff URLs)
 
-### Activity Feed Endpoint
+### Activity feed
 
-| Endpoint | Description | Auth Required |
-|----------|-------------|---------------|
-| `GET /activity` | Paginated activity feed with filtering | Yes |
+- `GET /activity` (cursor pagination; app uses `cursor` + `limit`)
 
-### Authentication Flow
+### Device tracking
 
-1. **Login**: User credentials → `/auth/login` → returns JWT tokens
-2. **Session Management**: Store tokens in SecureStore
-3. **Token Refresh**: Call `/auth/refresh` when access token expires
-4. **Logout**: Call `/auth/logout` to revoke device session
+`device_id` is a UUID v4 persisted client-side and sent on auth/session endpoints.
 
-### Device Tracking
-
-All auth endpoints require a `device_id` parameter (UUID v4) for multi-device session management.
 
 ## Documentation
 
 - **[AGENTS.md](AGENTS.md)** - Development guidelines and API usage details
-- **[extrachill-api Plugin](../extrachill-plugins/extrachill-api/)** - Complete REST API documentation
+- **[extrachill-api](../extrachill-plugins/extrachill-api/)** - REST API implementation (server-side)
 
 ## License
 

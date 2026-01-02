@@ -1,6 +1,6 @@
 # extrachill-app — Implementation Plan
 
-**CURRENT STATUS**: Token auth implemented in `extrachill-plugins/extrachill-users`. React Native app (v0.3.0) implements full authentication flow including OAuth2, registration, onboarding, and activity feed.
+**CURRENT STATUS**: Token auth is implemented in `extrachill-plugins/extrachill-users`. The React Native app (v0.4.0) implements authentication (email/password + Google), onboarding, activity feed, browser session handoff for `.extrachill.com` links, and capability-based drawer navigation.
 
 ## Vision
 Build a React Native mobile app for entire Extra Chill multisite network.
@@ -17,7 +17,6 @@ Build a React Native mobile app for entire Extra Chill multisite network.
 - **Single API base URL**: app calls one host in production (`extrachill.com`).
 - **Authenticated-only app**: users must have an account; no logged-out browsing.
 - **No Blog 1 membership for normal users**: do not add community accounts to Blog ID 1.
-- **Local build first**: run from simulator against live WordPress site.
 
 ## Backend Architecture (WordPress)
 The mobile app depends on two network-activated plugins:
@@ -140,7 +139,7 @@ All routes are under `extrachill/v1` and must work regardless of which multisite
 - `POST /wp-json/extrachill/v1/auth/logout` (implemented)
   - Body: `device_id` (UUID v4, required)
   - Behavior: revokes that device session
-- `GET /wp-json/extrachill/v1/me` (implemented)
+- `GET /wp-json/extrachill/v1/auth/me` (implemented)
   - Requires bearer token
   - Returns: current user payload used by app
 - `POST /wp-json/extrachill/v1/auth/google` (implemented)
@@ -232,13 +231,13 @@ Ensure API supports app-driven creation flows across ecosystem:
 - Implement object hydration + caching.
 - Add drawer navigation and custom fonts.
 
-## Acceptance Criteria (dev)
+## Acceptance Criteria
 - `POST /wp-json/extrachill/v1/auth/login` returns tokens for valid credentials with `device_id` (UUID v4 required).
 - `POST /wp-json/extrachill/v1/auth/login` with `set_cookie=true` creates a normal WP browsing session.
 - `POST /wp-json/extrachill/v1/auth/refresh` rotates refresh token and extends refresh expiry (sliding 30 days).
 - `POST /wp-json/extrachill/v1/auth/register` returns tokens and creates users on community (Blog ID 2) with `device_id` (UUID v4 required).
 - `POST /wp-json/extrachill/v1/auth/register` with `set_cookie=true` creates a normal WP browsing session.
-- `GET /wp-json/extrachill/v1/me` works with bearer auth.
+- `GET /wp-json/extrachill/v1/auth/me` works with bearer auth.
 - `POST /wp-json/extrachill/v1/auth/google` supports OAuth2 flow with automatic user creation.
 - `GET /wp-json/extrachill/v1/activity` returns real network-wide events (public feed).
 - Publishing content creates new feed items.

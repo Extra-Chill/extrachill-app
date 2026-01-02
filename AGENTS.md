@@ -1,13 +1,10 @@
 # Agent Instructions (extrachill-app)
 
 ## Commands
-- Install: `npm install`
 - Dev: `npm start` (Expo)
 - Run: `npm run ios` / `npm run android` / `npm run web`
 - Typecheck: `npx tsc -p tsconfig.json --noEmit` (strict)
-- Build: not scripted; use `eas build` (release) or `npx expo export`.
-- Lint/format/tests: not configured (no ESLint/Prettier/Jest/Vitest).
-- Single test: N/A until a test runner is added.
+- Lint/format/tests: not configured (no ESLint/Prettier/Jest/Vitest)
 
 ## Code Style
 - **TypeScript**: Strict mode enabled; avoid `any` (prefer `unknown` with narrowing).
@@ -23,49 +20,40 @@
 
 **Base URL**: `https://extrachill.com/wp-json/extrachill/v1` (configured in `src/api/client.ts`).
 
-**Authentication**: JWT access tokens via `Authorization: Bearer <access_token>` header.
+**Authentication**: Access tokens via `Authorization: Bearer <access_token>` header.
 
-**Device Tracking**: All auth endpoints require `device_id` as UUID v4 for multi-device session management.
+**Device Tracking**: Auth/session endpoints require `device_id` as UUID v4.
 
-**Source of Truth**:
-- Implementation: `extrachill-plugins/extrachill-api/inc/routes/`
-- Documentation: `extrachill-plugins/extrachill-api/docs/routes/`
-
-### Endpoints Consumed by Mobile App
+### Endpoints used by the app
 
 #### Authentication Endpoints
 
 **POST /auth/login**
-- Body: `identifier`, `password`, `device_id`, optional `device_name`, `remember`, `set_cookie`
-- Response: `{ access_token, access_expires_at, refresh_token, refresh_expires_at, user }`
-- User object: `{ id, username, display_name, avatar_url, profile_url }`
+- Body: `identifier`, `password`, `device_id`
+- Response: `LoginResponse`
+
+**POST /auth/register**
+- Body: `email`, `password`, `password_confirm`, `device_id`, `registration_source`, `registration_method`
+- Response: `RegisterResponse`
 
 **POST /auth/refresh**
-- Body: `refresh_token`, `device_id`, optional `remember`, `set_cookie`
-- Response: Same shape as `/auth/login`
+- Body: `refresh_token`, `device_id`
+- Response: `RefreshResponse`
 
 **GET /auth/me**
 - Requires authenticated request (Bearer token)
-- Response: `{ id, username, email, display_name, avatar_url, profile_url, registered, onboarding_completed }`
-- Note: `profile_url` may be empty string if `ec_get_user_profile_url()` unavailable
+- Response: `AuthMeResponse` (see `src/types/api.ts`)
+- Note: `profile_url` is optional
 
 **POST /auth/logout**
 - Requires authenticated request
 - Body: `device_id`
-- Response: `{ success: boolean, message: string }`
 
-#### Activity Feed Endpoint
+#### Activity feed
 
 **GET /activity**
 - Requires authenticated request
-- Query params: `cursor` (int), `limit` (int, max 100), `blog_id` (int), `actor_id` (int), `visibility` (`public` default, `private` requires admin), `types[]`
+- App uses: `cursor`, `limit`
 - Response: `{ items: ActivityItem[], next_cursor: number | null }`
 
-**Activity Types**: `post_published`, `post_updated`, `comment_created`
-
-**Post Types** (in `item.data.post_type`): Core (`post`, `page`), CPTs (`artist_profile`, `artist_link_page`, `newsletter`, `ec_doc`, `festival_wire`, `wook_horoscope`, `ec_chat`)
-
-### Additional Available API Categories
-
-The API plugin exposes additional endpoints (not currently consumed by this app):
-- `artists/*`, `users/*`, `community/*`, `chat/*`, `shop/*`, `newsletter/*`, `media/*`, `analytics/*`, `tools/*`, `events/*`, `stream/*`, `contact/*`, `docs/*`, `admin/*`
+`ActivityItem` and related types are defined in `src/types/api.ts`.
