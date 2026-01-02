@@ -204,7 +204,7 @@ export default function Feed() {
                 keyExtractor={(item) => item.id.toString()}
                 ListEmptyComponent={renderEmpty}
                 ListFooterComponent={renderFooter}
-                contentContainerStyle={{ paddingHorizontal: spacing.md, paddingBottom: spacing.xl }}
+                contentContainerStyle={{ paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.xl }}
                 refreshControl={
                     <RefreshControl
                         refreshing={isRefreshing}
