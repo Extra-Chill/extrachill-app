@@ -40,6 +40,10 @@
 - Body: `refresh_token`, `device_id`
 - Response: `RefreshResponse`
 
+**GET /auth/browser-handoff**
+- Requires authenticated request (Bearer token)
+- Returns: Handoff token for web session establishment
+
 **GET /auth/me**
 - Requires authenticated request (Bearer token)
 - Response: `AuthMeResponse` (see `src/types/api.ts`)

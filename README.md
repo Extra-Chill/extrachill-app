@@ -58,7 +58,7 @@ The app calls the Extra Chill REST API at `https://extrachill.com/wp-json/extrac
 
 ## Documentation
 
-- **[AGENTS.md](AGENTS.md)** - Development guidelines and API usage details
+- **[CLAUDE.md](CLAUDE.md)** - Development guidelines and API usage details
 - **[extrachill-api](../extrachill-plugins/extrachill-api/)** - REST API implementation (server-side)
 
 ## License

@@ -49,7 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Simplified component by removing state management and effects
 - API client `register()` method now includes registration metadata
 - Activity card event metadata formatting now applies to all post types (previously only events)
-- Documentation reorganization across AGENTS.md, README.md, and plan.md
+- Documentation reorganization across CLAUDE.md, README.md, and plan.md
   - Improved API integration documentation
   - Updated implementation status to reflect completed features
   - Enhanced project structure descriptions
@@ -139,7 +139,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Obsolete standalone feed screen (`app/feed.tsx`) replaced by drawer version
 - References to multisite and membership features in `plan.md`
-- Ignored files (`CLAUDE.md`, `AGENTS.md`) from `.gitignore`
+- Ignored files (`CLAUDE.md`, `CLAUDE.md`) from `.gitignore`
 - Mobile App Architecture section from `plan.md` (replaced with API-focused notes)
 
 ## [0.1.0] - 2025-12-17

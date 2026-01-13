@@ -1,12 +1,13 @@
 # extrachill-app — Implementation Plan
 
-**CURRENT STATUS**: Token auth is implemented in `extrachill-plugins/extrachill-users`. The React Native app (v0.4.0) implements authentication (email/password + Google), onboarding, activity feed, browser session handoff for `.extrachill.com` links, and capability-based drawer navigation.
+**CURRENT STATUS**: Token auth is implemented in `extrachill-plugins/extrachill-users`. The React Native app (v0.4.0) implements authentication (email/password + Google), onboarding, activity feed, browser session handoff for `.extrachill.com` links, capability-based drawer navigation, and Browser Handoff (/auth/browser-handoff).
 
 ## Vision
 Build a React Native mobile app for entire Extra Chill multisite network.
 
 - **Core surface**: a chronological, network-wide activity feed (Twitter-like).
 - **Content scope**: everything becomes an activity item (posts, comments, forum activity, artist updates, shop events, etc.).
+- **Authoring vision**: Native Gutenberg Integration inside the app as a primary authoring tool (replacing the web-handoff-only model).
 - **Admin scope**: no `wp-admin` inside the app. Publishing blog posts is not an app concern.
 - **Social model**: no follower-count-driven mechanics. Keep "following" open-ended; default is global chronological + modern filtering.
 
