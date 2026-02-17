@@ -5,7 +5,7 @@
  * Uses a refresh lock to prevent thundering herd on concurrent 401s.
  */
 
-import type { LoginResponse, RegisterResponse, RefreshResponse, BrowserHandoffResponse, AuthMeResponse, ActivityResponse, ApiError, OnboardingStatusResponse, OnboardingSubmitResponse, OAuthConfigResponse, GoogleLoginResponse } from '../types/api';
+import type { LoginResponse, RegisterResponse, RefreshResponse, BrowserHandoffResponse, AuthMeResponse, ActivityResponse, ApiError, OnboardingStatusResponse, OnboardingSubmitResponse, OAuthConfigResponse, GoogleLoginResponse, HydratedObject } from '../types/api';
 import { storeTokens, getTokens, clearTokens, getDeviceId, type StoredTokens } from '../auth/storage';
 
 const API_BASE = 'https://extrachill.com/wp-json/extrachill/v1';
@@ -330,6 +330,18 @@ class ApiClient {
         params.append('limit', limit.toString());
 
         return this.request<ActivityResponse>(`/activity?${params.toString()}`);
+    }
+
+    /**
+     * Hydrate a feed reference into a detail payload.
+     */
+    async getObject(objectType: string, blogId: number, id: string): Promise<HydratedObject> {
+        const params = new URLSearchParams();
+        params.append('object_type', objectType);
+        params.append('blog_id', blogId.toString());
+        params.append('id', id);
+
+        return this.request<HydratedObject>(`/object?${params.toString()}`);
     }
 
     /**
