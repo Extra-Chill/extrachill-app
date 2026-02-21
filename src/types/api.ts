@@ -98,6 +98,31 @@ export interface ApiError {
     };
 }
 
+// Object Hydration Types
+
+/**
+ * Common fields returned by GET /object for all object types.
+ * The `data` field contains type-specific content.
+ */
+export interface HydratedObject {
+    object_type: string;
+    blog_id: number;
+    id: string;
+    title?: string;
+    content?: string;
+    excerpt?: string;
+    permalink?: string;
+    author?: {
+        id: number;
+        display_name: string;
+        avatar_url?: string;
+    };
+    created_at?: string;
+    updated_at?: string;
+    /** Type-specific payload — shape depends on object_type */
+    data?: Record<string, unknown>;
+}
+
 // Activity Feed Types
 export interface ActivityObject {
     object_type: string;
