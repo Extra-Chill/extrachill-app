@@ -57,7 +57,8 @@ export function DrawerContent(props: DrawerContentComponentProps) {
             const isExtrachillLink = host.includes('extrachill.link');
 
             if (isAuthenticated && isExtrachillCom && !isExtrachillLink) {
-                const handoffUrl = await api.createBrowserHandoffUrl(url);
+                const response = await api.auth.createBrowserHandoff(url);
+                const handoffUrl = response.handoff_url;
                 await Linking.openURL(handoffUrl);
                 return;
             }

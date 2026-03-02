@@ -1,15 +1,19 @@
 /**
  * Auth context provider and useAuth hook
- * 
- * Manages user authentication state. Token management is delegated to the API client.
- * OAuth config is fetched on init. Google Sign-In is lazily loaded when triggered
- * (requires native module, won't work in Expo Go).
+ *
+ * Manages user authentication state. Token management is delegated to
+ * AuthFetchTransport from @extrachill/api-client, with expo-secure-store
+ * wired in via src/api/client.ts.
+ *
+ * OAuth config is fetched on init. Google Sign-In is lazily loaded when
+ * triggered (requires native module, won't work in Expo Go).
  */
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
 import type { AuthMeResponse, OAuthConfigResponse } from '../types/api';
-import { api } from '../api/client';
+import { api, transport } from '../api/client';
+import { getDeviceId } from './storage';
 
 let googleSignInModule: typeof import('@react-native-google-signin/google-signin') | null = null;
 let oauthConfigCache: OAuthConfigResponse | null = null;
@@ -35,6 +39,13 @@ interface AuthContextValue extends AuthState {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 /**
+ * Parse an access_expires_at ISO string into a Unix timestamp (seconds).
+ */
+function parseExpiresAt(expiresAt: string): number {
+    return Math.floor(new Date(expiresAt).getTime() / 1000);
+}
+
+/**
  * Lazily load and configure Google Sign-In.
  * Returns the module if available, null if native module not found.
  */
@@ -43,7 +54,7 @@ async function getGoogleSignIn(config: OAuthConfigResponse): Promise<typeof impo
 
     try {
         googleSignInModule = await import('@react-native-google-signin/google-signin');
-        
+
         const iosClientId = config.google.ios_client_id;
         const webClientId = config.google.web_client_id;
 
@@ -81,23 +92,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const checkAuth = useCallback(async () => {
-        await api.initialize(handleAuthFailure);
+        // Initialize transport (loads stored tokens) and set failure callback
+        transport.setOnAuthFailure(handleAuthFailure);
+        await transport.initialize();
 
         // Fetch OAuth config (lazy-load Google Sign-In when actually used)
         let googleEnabled = false;
         try {
-            oauthConfigCache = await api.getOAuthConfig();
+            oauthConfigCache = await api.auth.getOAuthConfig();
             googleEnabled = oauthConfigCache.google.enabled;
         } catch {
             // OAuth config fetch failed, Google Sign-In disabled
         }
 
-        if (!api.hasTokens()) {
-            setState({ 
-                user: null, 
-                isLoading: false, 
-                isAuthenticated: false, 
-                sessionExpired: false, 
+        if (!transport.hasTokens()) {
+            setState({
+                user: null,
+                isLoading: false,
+                isAuthenticated: false,
+                sessionExpired: false,
                 onboardingCompleted: true,
                 googleEnabled,
             });
@@ -105,22 +118,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
-            const user = await api.getMe();
-            const onboardingStatus = await api.getOnboardingStatus();
-            setState({ 
-                user, 
-                isLoading: false, 
-                isAuthenticated: true, 
+            const user = await api.auth.me();
+            const onboardingStatus = await api.users.getOnboardingStatus();
+            setState({
+                user,
+                isLoading: false,
+                isAuthenticated: true,
                 sessionExpired: false,
                 onboardingCompleted: onboardingStatus.completed,
                 googleEnabled,
             });
         } catch {
-            setState({ 
-                user: null, 
-                isLoading: false, 
-                isAuthenticated: false, 
-                sessionExpired: false, 
+            setState({
+                user: null,
+                isLoading: false,
+                isAuthenticated: false,
+                sessionExpired: false,
                 onboardingCompleted: true,
                 googleEnabled,
             });
@@ -132,11 +145,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [checkAuth]);
 
     const login = useCallback(async (identifier: string, password: string) => {
-        await api.login(identifier, password);
+        const deviceId = await getDeviceId();
+        const response = await api.auth.login({ identifier, password, device_id: deviceId });
+
+        await transport.setTokens({
+            accessToken: response.access_token,
+            refreshToken: response.refresh_token,
+            accessExpiresAt: parseExpiresAt(response.access_expires_at),
+        });
 
         const [me, onboardingStatus] = await Promise.all([
-            api.getMe(),
-            api.getOnboardingStatus(),
+            api.auth.me(),
+            api.users.getOnboardingStatus(),
         ]);
 
         setState(prev => ({
@@ -150,8 +170,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const register = useCallback(async (email: string, password: string, passwordConfirm: string) => {
-        const response = await api.register(email, password, passwordConfirm);
-        const me = await api.getMe();
+        const deviceId = await getDeviceId();
+        const response = await api.auth.register({
+            email,
+            password,
+            password_confirm: passwordConfirm,
+            device_id: deviceId,
+            registration_source: 'extrachill-app',
+            registration_method: 'standard',
+        });
+
+        await transport.setTokens({
+            accessToken: response.access_token,
+            refreshToken: response.refresh_token,
+            accessExpiresAt: parseExpiresAt(response.access_expires_at),
+        });
+
+        const me = await api.auth.me();
 
         setState(prev => ({
             ...prev,
@@ -188,11 +223,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 throw new Error('No ID token received from Google');
             }
 
-            await api.loginWithGoogle(idToken);
+            const deviceId = await getDeviceId();
+            const authResponse = await api.auth.loginWithGoogle({
+                id_token: idToken,
+                device_id: deviceId,
+                registration_source: 'extrachill-app',
+                registration_method: 'google',
+            });
+
+            await transport.setTokens({
+                accessToken: authResponse.access_token,
+                refreshToken: authResponse.refresh_token,
+                accessExpiresAt: parseExpiresAt(authResponse.access_expires_at),
+            });
 
             const [me, onboardingStatus] = await Promise.all([
-                api.getMe(),
-                api.getOnboardingStatus(),
+                api.auth.me(),
+                api.users.getOnboardingStatus(),
             ]);
 
             setState(prev => ({
@@ -227,7 +274,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userIsArtist: boolean,
         userIsProfessional: boolean
     ) => {
-        const response = await api.submitOnboarding(username, userIsArtist, userIsProfessional);
+        const response = await api.users.submitOnboarding({
+            username,
+            user_is_artist: userIsArtist,
+            user_is_professional: userIsProfessional,
+        });
 
         setState(prev => ({
             ...prev,
@@ -249,13 +300,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         }
 
-        await api.logout();
-        setState(prev => ({ 
+        try {
+            if (transport.hasTokens()) {
+                const deviceId = await getDeviceId();
+                await api.auth.logout(deviceId);
+            }
+        } catch {
+            // Ignore logout errors, clear tokens anyway
+        }
+
+        await transport.clearAuth();
+        setState(prev => ({
             ...prev,
-            user: null, 
-            isLoading: false, 
-            isAuthenticated: false, 
-            sessionExpired: false, 
+            user: null,
+            isLoading: false,
+            isAuthenticated: false,
+            sessionExpired: false,
             onboardingCompleted: true,
         }));
     }, []);

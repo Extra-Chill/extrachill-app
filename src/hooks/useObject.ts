@@ -33,7 +33,7 @@ export function useObject(
 
     const fetchAndCache = useCallback(async () => {
         try {
-            const result = await api.getObject(objectType, blogId, id);
+            const result = await api.activity.getObject(objectType, blogId, id);
             await objectCache.set(objectType, blogId, id, result);
 
             if (mountedRef.current) {

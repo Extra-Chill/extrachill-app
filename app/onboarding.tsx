@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../src/auth/context';
 import { useTheme } from '../src/theme/context';
 import { api } from '../src/api/client';
+
 import { Button, TextInput, Notice, Checkbox } from '../src/components';
 
 export default function Onboarding() {
@@ -34,7 +35,7 @@ export default function Onboarding() {
     useEffect(() => {
         const fetchOnboardingStatus = async () => {
             try {
-                const status = await api.getOnboardingStatus();
+                const status = await api.users.getOnboardingStatus();
                 setUsername(status.fields.username);
                 setIsArtist(status.fields.user_is_artist);
                 setIsProfessional(status.fields.user_is_professional);

@@ -36,7 +36,7 @@ export default function Feed() {
 
     const fetchFeed = useCallback(async (cursor?: number) => {
         try {
-            const response = await api.getActivity(cursor?.toString(), 20);
+            const response = await api.activity.getFeed(cursor?.toString(), 20);
             return response;
         } catch (err) {
             throw err instanceof Error ? err : new Error('Failed to load feed');
