@@ -24,7 +24,7 @@ export function Avatar({ url, size = 32, onPress }: AvatarProps) {
                     height: size,
                     borderRadius: size / 2,
                     backgroundColor: colors.cardBackground,
-                    borderColor: colors.border,
+                    borderColor: colors.borderColor,
                 },
             ]}
         >

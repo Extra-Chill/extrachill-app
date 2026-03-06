@@ -129,9 +129,9 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                 styles.container,
                 {
                     backgroundColor: colors.cardBackground,
-                    borderRadius: borderRadius.md,
-                    padding: spacing.md,
-                    marginBottom: spacing.sm,
+                    borderRadius: borderRadius.borderRadiusMd,
+                    padding: spacing.spacingMd,
+                    marginBottom: spacing.spacingSm,
                 },
             ]}
             onPress={onPress}
@@ -142,8 +142,8 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                 style={[
                     styles.badgeRow,
                     {
-                        marginBottom: spacing.sm,
-                        gap: spacing.xs,
+                        marginBottom: spacing.spacingSm,
+                        gap: spacing.spacingXs,
                     },
                 ]}
             >
@@ -151,8 +151,8 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                     style={[
                         styles.badge,
                         {
-                            backgroundColor: colors.muted + '20',
-                            borderRadius: borderRadius.sm,
+                            backgroundColor: colors.mutedText + '20',
+                            borderRadius: borderRadius.borderRadiusSm,
                         },
                     ]}
                 >
@@ -160,8 +160,8 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                         style={[
                             styles.badgeText,
                             {
-                                color: colors.muted,
-                                fontSize: fontSize.xs,
+                                color: colors.mutedText,
+                                fontSize: fontSize.fontSizeXs,
                                 fontFamily: fontFamily.body,
                             },
                         ]}
@@ -171,8 +171,8 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                 </View>
 
                 {allTaxonomyTerms.map(({ taxonomy, term }) => {
-                    const backgroundColor = term.badge?.background_color ?? colors.muted + '20';
-                    const textColor = term.badge?.text_color ?? colors.muted;
+                    const bgColor = term.badge?.background_color ?? colors.mutedText + '20';
+                    const txtColor = term.badge?.text_color ?? colors.mutedText;
 
                     return (
                         <View
@@ -180,8 +180,8 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                             style={[
                                 styles.badge,
                                 {
-                                    backgroundColor,
-                                    borderRadius: borderRadius.sm,
+                                    backgroundColor: bgColor,
+                                    borderRadius: borderRadius.borderRadiusSm,
                                 },
                             ]}
                         >
@@ -189,8 +189,8 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                                 style={[
                                     styles.taxonomyBadgeText,
                                     {
-                                        color: textColor,
-                                        fontSize: fontSize.xs,
+                                        color: txtColor,
+                                        fontSize: fontSize.fontSizeXs,
                                         fontFamily: fontFamily.body,
                                     },
                                 ]}
@@ -207,8 +207,8 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                     style={[
                         styles.summary,
                         {
-                            color: colors.text,
-                            fontSize: fontSize.base,
+                            color: colors.textColor,
+                            fontSize: fontSize.fontSizeBase,
                             fontFamily: fontFamily.body,
                         },
                     ]}
@@ -220,8 +220,8 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                     style={[
                         styles.timestamp,
                         {
-                            color: colors.muted,
-                            fontSize: fontSize.sm,
+                            color: colors.mutedText,
+                            fontSize: fontSize.fontSizeSm,
                             fontFamily: fontFamily.body,
                         },
                     ]}
@@ -235,10 +235,10 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                     style={[
                         styles.eventMeta,
                         {
-                            color: colors.text,
-                            fontSize: fontSize.sm,
+                            color: colors.textColor,
+                            fontSize: fontSize.fontSizeSm,
                             fontFamily: fontFamily.body,
-                            marginTop: spacing.xs,
+                            marginTop: spacing.spacingXs,
                         },
                     ]}
                 >
@@ -251,10 +251,10 @@ export function ActivityCard({ item, onPress }: ActivityCardProps) {
                     style={[
                         styles.excerpt,
                         {
-                            color: colors.muted,
-                            fontSize: fontSize.sm,
+                            color: colors.mutedText,
+                            fontSize: fontSize.fontSizeSm,
                             fontFamily: fontFamily.body,
-                            marginTop: spacing.sm,
+                            marginTop: spacing.spacingSm,
                         },
                     ]}
                     numberOfLines={3}

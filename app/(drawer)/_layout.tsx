@@ -25,8 +25,8 @@ export default function DrawerLayout() {
 
     if (isLoading) {
         return (
-            <View style={[styles.loading, { backgroundColor: colors.background }]}>
-                <ActivityIndicator size="large" color={colors.text} />
+            <View style={[styles.loading, { backgroundColor: colors.backgroundColor }]}>
+                <ActivityIndicator size="large" color={colors.textColor} />
             </View>
         );
     }

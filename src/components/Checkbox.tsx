@@ -3,7 +3,7 @@
  *
  * Mirrors extrachill/style.css checkbox styling:
  * - 18x18px box with 2px border
- * - 5px border-radius (borderRadius.sm)
+ * - 5px border-radius (borderRadiusSm)
  * - Accent background when checked with white checkmark
  * - 0.5 opacity when disabled
  */
@@ -32,9 +32,9 @@ export function Checkbox({ label, checked, onPress, disabled = false }: Checkbox
                 style={[
                     styles.box,
                     {
-                        borderColor: checked ? colors.accent : colors.border,
-                        borderRadius: borderRadius.sm,
-                        backgroundColor: checked ? colors.accent : colors.background,
+                        borderColor: checked ? colors.accent : colors.borderColor,
+                        borderRadius: borderRadius.borderRadiusSm,
+                        backgroundColor: checked ? colors.accent : colors.backgroundColor,
                     },
                     disabled && styles.disabled,
                 ]}
@@ -45,10 +45,10 @@ export function Checkbox({ label, checked, onPress, disabled = false }: Checkbox
                 style={[
                     styles.label,
                     {
-                        color: disabled ? colors.muted : colors.text,
-                        fontSize: fontSize.base,
+                        color: disabled ? colors.mutedText : colors.textColor,
+                        fontSize: fontSize.fontSizeBase,
                         fontFamily: fontFamily.body,
-                        marginLeft: spacing.sm,
+                        marginLeft: spacing.spacingSm,
                     },
                     disabled && styles.disabled,
                 ]}

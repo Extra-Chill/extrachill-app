@@ -59,9 +59,9 @@ export function GoogleSignInButton({
             style={[
                 styles.container,
                 {
-                    borderRadius: borderRadius.sm,
-                    paddingVertical: spacing.md,
-                    paddingHorizontal: spacing.lg,
+                    borderRadius: borderRadius.borderRadiusSm,
+                    paddingVertical: spacing.spacingMd,
+                    paddingHorizontal: spacing.spacingLg,
                 },
                 isDisabled && styles.disabled,
             ]}
@@ -80,7 +80,7 @@ export function GoogleSignInButton({
                         style={[
                             styles.text,
                             {
-                                fontSize: fontSize.body,
+                                fontSize: fontSize.fontSizeBody,
                                 fontFamily: fontFamily.body,
                             },
                         ]}

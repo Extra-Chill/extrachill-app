@@ -26,7 +26,7 @@ export function Notice({ type, message, title }: NoticeProps) {
     const borderColors: Record<NoticeType, string> = {
         success: colors.accent,
         info: colors.accent2,
-        error: colors.error,
+        error: colors.errorColor,
     };
 
     return (
@@ -36,9 +36,9 @@ export function Notice({ type, message, title }: NoticeProps) {
                 {
                     backgroundColor: colors.noticeBg,
                     borderLeftColor: borderColors[type],
-                    borderRadius: borderRadius.md,
-                    padding: spacing.md,
-                    marginBottom: spacing.md,
+                    borderRadius: borderRadius.borderRadiusMd,
+                    padding: spacing.spacingMd,
+                    marginBottom: spacing.spacingMd,
                 },
             ]}
         >
@@ -46,7 +46,7 @@ export function Notice({ type, message, title }: NoticeProps) {
                 <Text
                     style={[
                         styles.title,
-                        { color: colors.text, fontSize: fontSize.base },
+                        { color: colors.textColor, fontSize: fontSize.fontSizeBase },
                     ]}
                 >
                     {title}
@@ -55,7 +55,7 @@ export function Notice({ type, message, title }: NoticeProps) {
             <Text
                 style={[
                     styles.message,
-                    { color: colors.text, fontSize: fontSize.sm },
+                    { color: colors.textColor, fontSize: fontSize.fontSizeSm },
                 ]}
             >
                 {message}

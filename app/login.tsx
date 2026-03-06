@@ -126,22 +126,22 @@ export default function Login() {
 
     return (
         <KeyboardAvoidingView
-            style={[styles.container, { backgroundColor: colors.background }]}
+            style={[styles.container, { backgroundColor: colors.backgroundColor }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <View style={[styles.content, { paddingHorizontal: spacing.xl }]}>
+            <View style={[styles.content, { paddingHorizontal: spacing.spacingXl }]}>
                 <Image
                     source={require('../assets/logo.png')}
-                    style={[styles.logo, { marginBottom: spacing.lg }]}
+                    style={[styles.logo, { marginBottom: spacing.spacingLg }]}
                     resizeMode="contain"
                 />
                 <Text
                     style={[
                         styles.subtitle,
                         { 
-                            color: colors.muted, 
-                            fontSize: fontSize.base, 
-                            marginBottom: spacing.xl,
+                            color: colors.mutedText, 
+                            fontSize: fontSize.fontSizeBase, 
+                            marginBottom: spacing.spacingXl,
                             fontFamily: fontFamily.body,
                         },
                     ]}
@@ -187,7 +187,7 @@ export default function Login() {
                     />
                 )}
 
-                <View style={{ marginTop: spacing.sm }}>
+                <View style={{ marginTop: spacing.spacingSm }}>
                     <Button
                         variant="secondary"
                         size="large"
@@ -200,17 +200,17 @@ export default function Login() {
                 </View>
 
                 {googleEnabled && (
-                    <View style={[styles.dividerContainer, { marginTop: spacing.lg }]}>
-                        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-                        <Text style={[styles.dividerText, { color: colors.muted, fontFamily: fontFamily.body }]}>
+                    <View style={[styles.dividerContainer, { marginTop: spacing.spacingLg }]}>
+                        <View style={[styles.dividerLine, { backgroundColor: colors.borderColor }]} />
+                        <Text style={[styles.dividerText, { color: colors.mutedText, fontFamily: fontFamily.body }]}>
                             or
                         </Text>
-                        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                        <View style={[styles.dividerLine, { backgroundColor: colors.borderColor }]} />
                     </View>
                 )}
 
                 {googleEnabled && (
-                    <View style={{ marginTop: spacing.lg }}>
+                    <View style={{ marginTop: spacing.spacingLg }}>
                         <GoogleSignInButton
                             onPress={handleGoogleSignIn}
                             loading={isGoogleLoading}
@@ -219,8 +219,8 @@ export default function Login() {
                     </View>
                 )}
 
-                <View style={[styles.toggleContainer, { marginTop: spacing.lg }]}>
-                    <Text style={[styles.toggleText, { color: colors.muted, fontFamily: fontFamily.body }]}>
+                <View style={[styles.toggleContainer, { marginTop: spacing.spacingLg }]}>
+                    <Text style={[styles.toggleText, { color: colors.mutedText, fontFamily: fontFamily.body }]}>
                         {isLogin ? "Don't have an account? " : 'Already have an account? '}
                     </Text>
                     <Pressable onPress={() => switchMode(isLogin ? 'register' : 'login')} disabled={isAnyLoading}>

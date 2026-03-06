@@ -28,8 +28,8 @@ export default function Index() {
     }, [isLoading, isAuthenticated, onboardingCompleted, router]);
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <ActivityIndicator size="large" color={colors.text} />
+        <View style={[styles.container, { backgroundColor: colors.backgroundColor }]}>
+            <ActivityIndicator size="large" color={colors.textColor} />
         </View>
     );
 }

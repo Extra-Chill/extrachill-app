@@ -28,7 +28,7 @@ export function TextInput({
     return (
         <View style={styles.container}>
             {label && (
-                <Text style={[styles.label, { color: colors.text, fontSize: fontSize.base, fontFamily: fontFamily.body }]}>
+                <Text style={[styles.label, { color: colors.textColor, fontSize: fontSize.fontSizeBase, fontFamily: fontFamily.body }]}>
                     {label}
                 </Text>
             )}
@@ -36,16 +36,16 @@ export function TextInput({
                 style={[
                     styles.input,
                     {
-                        borderColor: error ? colors.error : isFocused ? colors.accent : colors.border,
-                        borderRadius: borderRadius.md,
-                        paddingHorizontal: spacing.md,
-                        fontSize: fontSize.base,
+                        borderColor: error ? colors.errorColor : isFocused ? colors.accent : colors.borderColor,
+                        borderRadius: borderRadius.borderRadiusMd,
+                        paddingHorizontal: spacing.spacingMd,
+                        fontSize: fontSize.fontSizeBase,
                         fontFamily: fontFamily.body,
-                        color: colors.text,
-                        backgroundColor: colors.background,
+                        color: colors.textColor,
+                        backgroundColor: colors.backgroundColor,
                     },
                 ]}
-                placeholderTextColor={colors.muted}
+                placeholderTextColor={colors.mutedText}
                 onFocus={(e) => {
                     setIsFocused(true);
                     props.onFocus?.(e);
@@ -57,7 +57,7 @@ export function TextInput({
                 {...props}
             />
             {error && (
-                <Text style={[styles.error, { color: colors.error, fontSize: fontSize.sm }]}>
+                <Text style={[styles.error, { color: colors.errorColor, fontSize: fontSize.fontSizeSm }]}>
                     {error}
                 </Text>
             )}

@@ -49,7 +49,7 @@ export function Button({
                 backgroundColor: colors.accent3,
             },
             text: {
-                color: colors.buttonText,
+                color: colors.buttonTextColor,
             },
         },
         secondary: {
@@ -57,25 +57,25 @@ export function Button({
                 backgroundColor: colors.accent,
             },
             text: {
-                color: colors.buttonText,
+                color: colors.buttonTextColor,
             },
         },
         tertiary: {
             container: {
                 backgroundColor: colors.cardBackground,
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: colors.borderColor,
             },
             text: {
-                color: colors.muted,
+                color: colors.mutedText,
             },
         },
         danger: {
             container: {
-                backgroundColor: colors.error,
+                backgroundColor: colors.errorColor,
             },
             text: {
-                color: colors.buttonText,
+                color: colors.buttonTextColor,
             },
         },
     };
@@ -83,29 +83,29 @@ export function Button({
     const sizeStyles: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> = {
         small: {
             container: {
-                paddingVertical: spacing.sm,
-                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.spacingSm,
+                paddingHorizontal: spacing.spacingMd,
             },
             text: {
-                fontSize: fontSize.sm,
+                fontSize: fontSize.fontSizeSm,
             },
         },
         medium: {
             container: {
-                paddingVertical: spacing.sm,
-                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.spacingSm,
+                paddingHorizontal: spacing.spacingMd,
             },
             text: {
-                fontSize: fontSize.base,
+                fontSize: fontSize.fontSizeBase,
             },
         },
         large: {
             container: {
-                paddingVertical: spacing.md,
-                paddingHorizontal: spacing.lg,
+                paddingVertical: spacing.spacingMd,
+                paddingHorizontal: spacing.spacingLg,
             },
             text: {
-                fontSize: fontSize.body,
+                fontSize: fontSize.fontSizeBody,
             },
         },
     };
@@ -116,7 +116,7 @@ export function Button({
         <TouchableOpacity
             style={[
                 styles.container,
-                { borderRadius: borderRadius.sm },
+                { borderRadius: borderRadius.borderRadiusSm },
                 variantStyles[variant].container,
                 sizeStyles[size].container,
                 isDisabled && styles.disabled,

@@ -24,13 +24,13 @@ function DrawerItem({ label, onPress, danger = false }: DrawerItemProps) {
     return (
         <TouchableOpacity
             onPress={onPress}
-            style={[styles.item, { paddingVertical: spacing.md, paddingHorizontal: spacing.lg }]}
+            style={[styles.item, { paddingVertical: spacing.spacingMd, paddingHorizontal: spacing.spacingLg }]}
             activeOpacity={0.7}
         >
             <Text
                 style={{
-                    color: danger ? colors.error : colors.text,
-                    fontSize: fontSize.body,
+                    color: danger ? colors.errorColor : colors.textColor,
+                    fontSize: fontSize.fontSizeBody,
                     fontFamily: fontFamily.body,
                     fontWeight: '600',
                 }}
@@ -76,24 +76,24 @@ export function DrawerContent(props: DrawerContentComponentProps) {
 
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.background }]}> 
+        <View style={[styles.container, { backgroundColor: colors.backgroundColor }]}> 
             <View
                 style={[
                     styles.header,
                     {
-                        paddingTop: spacing.xl,
-                        paddingHorizontal: spacing.lg,
-                        paddingBottom: spacing.lg,
-                        borderBottomColor: colors.border,
+                        paddingTop: spacing.spacingXl,
+                        paddingHorizontal: spacing.spacingLg,
+                        paddingBottom: spacing.spacingLg,
+                        borderBottomColor: colors.borderColor,
                     },
                 ]}
             >
                 <Avatar url={user?.avatar_url} size={56} />
                 <Text
                     style={{
-                        marginTop: spacing.md,
-                        color: colors.text,
-                        fontSize: fontSize.lg,
+                        marginTop: spacing.spacingMd,
+                        color: colors.textColor,
+                        fontSize: fontSize.fontSizeLg,
                         fontFamily: fontFamily.heading,
                         fontWeight: '700',
                     }}
@@ -102,9 +102,9 @@ export function DrawerContent(props: DrawerContentComponentProps) {
                 </Text>
                 <Text
                     style={{
-                        marginTop: spacing.xs,
-                        color: colors.muted,
-                        fontSize: fontSize.base,
+                        marginTop: spacing.spacingXs,
+                        color: colors.mutedText,
+                        fontSize: fontSize.fontSizeBase,
                         fontFamily: fontFamily.body,
                     }}
                 >
@@ -112,7 +112,7 @@ export function DrawerContent(props: DrawerContentComponentProps) {
                 </Text>
             </View>
 
-            <View style={{ paddingTop: spacing.sm }}>
+            <View style={{ paddingTop: spacing.spacingSm }}>
                 <DrawerItem
                     label="View Profile"
                     onPress={() => {
@@ -163,7 +163,7 @@ export function DrawerContent(props: DrawerContentComponentProps) {
                 ) : null}
             </View>
 
-            <View style={{ marginTop: 'auto', paddingBottom: spacing.lg }}>
+            <View style={{ marginTop: 'auto', paddingBottom: spacing.spacingLg }}>
                 <DrawerItem label="Sign Out" danger onPress={handleLogout} />
             </View>
         </View>

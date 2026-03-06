@@ -109,8 +109,8 @@ export default function Feed() {
                 styles.header,
                 {
                     backgroundColor: colors.headerBackground,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.sm,
+                    paddingHorizontal: spacing.spacingMd,
+                    paddingVertical: spacing.spacingSm,
                 },
             ]}
         >
@@ -138,8 +138,8 @@ export default function Feed() {
         if (!isLoadingMore) return null;
 
         return (
-            <View style={[styles.footer, { padding: spacing.md }]}> 
-                <ActivityIndicator color={colors.muted} />
+            <View style={[styles.footer, { padding: spacing.spacingMd }]}> 
+                <ActivityIndicator color={colors.mutedText} />
             </View>
         );
     };
@@ -148,11 +148,11 @@ export default function Feed() {
         if (isLoading) return null;
 
         return (
-            <View style={[styles.emptyContainer, { padding: spacing.xl }]}> 
+            <View style={[styles.emptyContainer, { padding: spacing.spacingXl }]}> 
                 <Text
                     style={{
-                        color: colors.muted,
-                        fontSize: fontSize.base,
+                        color: colors.mutedText,
+                        fontSize: fontSize.fontSizeBase,
                         fontFamily: fontFamily.body,
                         textAlign: 'center',
                     }}
@@ -165,10 +165,10 @@ export default function Feed() {
 
     if (isLoading) {
         return (
-            <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={['top']}>
                 {renderHeader()}
                 <View style={styles.centered}>
-                    <ActivityIndicator size="large" color={colors.text} />
+                    <ActivityIndicator size="large" color={colors.textColor} />
                 </View>
             </SafeAreaView>
         );
@@ -176,15 +176,15 @@ export default function Feed() {
 
     if (error && items.length === 0) {
         return (
-            <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={['top']}>
                 {renderHeader()}
-                <View style={[styles.centered, { padding: spacing.xl }]}> 
+                <View style={[styles.centered, { padding: spacing.spacingXl }]}> 
                     <Text
                         style={{
-                            color: colors.error,
-                            fontSize: fontSize.base,
+                            color: colors.errorColor,
+                            fontSize: fontSize.fontSizeBase,
                             fontFamily: fontFamily.body,
-                            marginBottom: spacing.md,
+                            marginBottom: spacing.spacingMd,
                             textAlign: 'center',
                         }}
                     >
@@ -196,7 +196,7 @@ export default function Feed() {
     }
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={['top']}>
             {renderHeader()}
             <FlatList
                 data={items}
@@ -204,12 +204,12 @@ export default function Feed() {
                 keyExtractor={(item) => item.id.toString()}
                 ListEmptyComponent={renderEmpty}
                 ListFooterComponent={renderFooter}
-                contentContainerStyle={{ paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.xl }}
+                contentContainerStyle={{ paddingHorizontal: spacing.spacingMd, paddingTop: spacing.spacingSm, paddingBottom: spacing.spacingXl }}
                 refreshControl={
                     <RefreshControl
                         refreshing={isRefreshing}
                         onRefresh={handleRefresh}
-                        tintColor={colors.muted}
+                        tintColor={colors.mutedText}
                     />
                 }
                 onEndReached={handleLoadMore}

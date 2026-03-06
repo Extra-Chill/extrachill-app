@@ -88,26 +88,26 @@ export default function Onboarding() {
 
     if (isLoading) {
         return (
-            <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-                <ActivityIndicator size="large" color={colors.text} />
+            <View style={[styles.loadingContainer, { backgroundColor: colors.backgroundColor }]}>
+                <ActivityIndicator size="large" color={colors.textColor} />
             </View>
         );
     }
 
     return (
         <KeyboardAvoidingView
-            style={[styles.container, { backgroundColor: colors.background }]}
+            style={[styles.container, { backgroundColor: colors.backgroundColor }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <View style={[styles.content, { paddingHorizontal: spacing.xl }]}>
+            <View style={[styles.content, { paddingHorizontal: spacing.spacingXl }]}>
                 <Text
                     style={[
                         styles.title,
                         {
-                            color: colors.text,
-                            fontSize: fontSize.xl,
+                            color: colors.textColor,
+                            fontSize: fontSize.fontSizeXl,
                             fontFamily: fontFamily.heading,
-                            marginBottom: spacing.sm,
+                            marginBottom: spacing.spacingSm,
                         },
                     ]}
                 >
@@ -117,10 +117,10 @@ export default function Onboarding() {
                     style={[
                         styles.subtitle,
                         {
-                            color: colors.muted,
-                            fontSize: fontSize.base,
+                            color: colors.mutedText,
+                            fontSize: fontSize.fontSizeBase,
                             fontFamily: fontFamily.body,
-                            marginBottom: spacing.xl,
+                            marginBottom: spacing.spacingXl,
                         },
                     ]}
                 >
@@ -133,10 +133,10 @@ export default function Onboarding() {
                     style={[
                         styles.label,
                         {
-                            color: colors.text,
-                            fontSize: fontSize.base,
+                            color: colors.textColor,
+                            fontSize: fontSize.fontSizeBase,
                             fontFamily: fontFamily.body,
-                            marginBottom: spacing.sm,
+                            marginBottom: spacing.spacingSm,
                         },
                     ]}
                 >
@@ -156,18 +156,18 @@ export default function Onboarding() {
                     style={[
                         styles.hint,
                         {
-                            color: colors.muted,
-                            fontSize: fontSize.sm,
+                            color: colors.mutedText,
+                            fontSize: fontSize.fontSizeSm,
                             fontFamily: fontFamily.body,
-                            marginTop: -spacing.sm,
-                            marginBottom: spacing.lg,
+                            marginTop: -spacing.spacingSm,
+                            marginBottom: spacing.spacingLg,
                         },
                     ]}
                 >
                     Letters, numbers, hyphens, and underscores only. 3-60 characters.
                 </Text>
 
-                <View style={[styles.checkboxGroup, { marginBottom: spacing.lg }]}>
+                <View style={[styles.checkboxGroup, { marginBottom: spacing.spacingLg }]}>
                     <Checkbox
                         label="I love music"
                         checked={true}
