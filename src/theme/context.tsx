@@ -5,7 +5,7 @@
  * the device color scheme. Components use the canonical token key names
  * (e.g. theme.colors.accent, theme.spacing.spacingMd, theme.fontSize.fontSizeXl).
  *
- * App-specific tokens (badgeColors, fontFamily) are defined here since
+ * App-specific tokens (fontFamily) are defined here since
  * they're not platform-wide concerns.
  */
 
@@ -16,6 +16,7 @@ import {
 	spacing as tokenSpacing,
 	borderRadius as tokenBorderRadius,
 	fontSize as tokenFontSize,
+	badge as tokenBadge,
 	type ColorTokenKey,
 } from '@extrachill/tokens';
 
@@ -63,13 +64,15 @@ const fontSizeValues = {
 	fontSizeBrand: tokenFontSize.fontSizeBrand.px,
 } as const;
 
-// ─── App-specific tokens ─────────────────────────────────────────────────────
+// ─── Badge colors (from @extrachill/tokens) ─────────────────────────────────
 
 export const badgeColors = {
-	artist: '#E21FC5',
-	team: '#1fc5e2',
-	professional: '#9D1FE2',
+	artist: tokenBadge.artistBadgeColor.value,
+	team: tokenBadge.teamBadgeColor.value,
+	professional: tokenBadge.professionalBadgeColor.value,
 } as const;
+
+// ─── App-specific tokens ─────────────────────────────────────────────────────
 
 export const fontFamily = {
 	body: 'Helvetica',
