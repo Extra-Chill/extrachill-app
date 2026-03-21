@@ -1,154 +1,57 @@
 /**
- * Activity feed screen.
+ * Home screen.
+ *
+ * Placeholder for section-based navigation. The app will evolve to present
+ * per-section views (events, community, blog, etc.) rather than a unified
+ * activity feed.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import {
-    View,
-    Text,
-    FlatList,
-    ActivityIndicator,
-    RefreshControl,
-    StyleSheet,
-    Image,
-} from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import type { ParamListBase } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
 import { useAuth } from '../../src/auth/context';
 import { useTheme } from '../../src/theme/context';
-import { api } from '../../src/api/client';
-import { ActivityCard, Avatar } from '../../src/components';
-import type { ActivityItem } from '../../src/types/api';
+import { Avatar } from '../../src/components';
 
 export default function Feed() {
     const navigation = useNavigation<DrawerNavigationProp<ParamListBase>>();
     const { user } = useAuth();
     const { colors, spacing, fontSize, fontFamily } = useTheme();
 
-    const [items, setItems] = useState<ActivityItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [nextCursor, setNextCursor] = useState<number | null>(null);
-    const [error, setError] = useState<string | null>(null);
-
-    const fetchFeed = useCallback(async (cursor?: number) => {
-        try {
-            const response = await api.activity.getFeed(cursor?.toString(), 20);
-            return response;
-        } catch (err) {
-            throw err instanceof Error ? err : new Error('Failed to load feed');
-        }
-    }, []);
-
-    const loadInitial = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetchFeed();
-            if (response) {
-                setItems(response.items);
-                setNextCursor(response.next_cursor);
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load feed');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [fetchFeed]);
-
-    const handleRefresh = useCallback(async () => {
-        setIsRefreshing(true);
-        setError(null);
-
-        try {
-            const response = await fetchFeed();
-            if (response) {
-                setItems(response.items);
-                setNextCursor(response.next_cursor);
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to refresh feed');
-        } finally {
-            setIsRefreshing(false);
-        }
-    }, [fetchFeed]);
-
-    const handleLoadMore = useCallback(async () => {
-        if (isLoadingMore || !nextCursor) return;
-
-        setIsLoadingMore(true);
-
-        try {
-            const response = await fetchFeed(nextCursor);
-            if (response) {
-                setItems((prev) => [...prev, ...response.items]);
-                setNextCursor(response.next_cursor);
-            }
-        } catch {
-            // ignore
-        } finally {
-            setIsLoadingMore(false);
-        }
-    }, [fetchFeed, nextCursor, isLoadingMore]);
-
-    useEffect(() => {
-        loadInitial();
-    }, [loadInitial]);
-
     const openDrawer = () => {
         navigation.openDrawer();
     };
 
-    const renderHeader = () => (
-        <View
-            style={[
-                styles.header,
-                {
-                    backgroundColor: colors.headerBackground,
-                    paddingHorizontal: spacing.spacingMd,
-                    paddingVertical: spacing.spacingSm,
-                },
-            ]}
-        >
-            <View style={styles.headerLeft}>
-                <Avatar url={user?.avatar_url} size={34} onPress={openDrawer} />
+    return (
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={['top']}>
+            <View
+                style={[
+                    styles.header,
+                    {
+                        backgroundColor: colors.headerBackground,
+                        paddingHorizontal: spacing.spacingMd,
+                        paddingVertical: spacing.spacingSm,
+                    },
+                ]}
+            >
+                <View style={styles.headerLeft}>
+                    <Avatar url={user?.avatar_url} size={34} onPress={openDrawer} />
+                </View>
+
+                <View style={styles.headerCenter}>
+                    <Image
+                        source={require('../../assets/logo.png')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
+                </View>
+
+                <View style={styles.headerRight} />
             </View>
 
-            <View style={styles.headerCenter}>
-                <Image
-                    source={require('../../assets/logo.png')}
-                    style={styles.logo}
-                    resizeMode="contain"
-                />
-            </View>
-
-            <View style={styles.headerRight} />
-        </View>
-    );
-
-    const renderItem = useCallback(({ item }: { item: ActivityItem }) => (
-        <ActivityCard item={item} />
-    ), []);
-
-    const renderFooter = () => {
-        if (!isLoadingMore) return null;
-
-        return (
-            <View style={[styles.footer, { padding: spacing.spacingMd }]}> 
-                <ActivityIndicator color={colors.mutedText} />
-            </View>
-        );
-    };
-
-    const renderEmpty = () => {
-        if (isLoading) return null;
-
-        return (
-            <View style={[styles.emptyContainer, { padding: spacing.spacingXl }]}> 
+            <View style={[styles.content, { padding: spacing.spacingXl }]}>
                 <Text
                     style={{
                         color: colors.mutedText,
@@ -157,64 +60,9 @@ export default function Feed() {
                         textAlign: 'center',
                     }}
                 >
-                    No activity yet
+                    Welcome to Extra Chill
                 </Text>
             </View>
-        );
-    };
-
-    if (isLoading) {
-        return (
-            <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={['top']}>
-                {renderHeader()}
-                <View style={styles.centered}>
-                    <ActivityIndicator size="large" color={colors.textColor} />
-                </View>
-            </SafeAreaView>
-        );
-    }
-
-    if (error && items.length === 0) {
-        return (
-            <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={['top']}>
-                {renderHeader()}
-                <View style={[styles.centered, { padding: spacing.spacingXl }]}> 
-                    <Text
-                        style={{
-                            color: colors.errorColor,
-                            fontSize: fontSize.fontSizeBase,
-                            fontFamily: fontFamily.body,
-                            marginBottom: spacing.spacingMd,
-                            textAlign: 'center',
-                        }}
-                    >
-                        {error}
-                    </Text>
-                </View>
-            </SafeAreaView>
-        );
-    }
-
-    return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={['top']}>
-            {renderHeader()}
-            <FlatList
-                data={items}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id.toString()}
-                ListEmptyComponent={renderEmpty}
-                ListFooterComponent={renderFooter}
-                contentContainerStyle={{ paddingHorizontal: spacing.spacingMd, paddingTop: spacing.spacingSm, paddingBottom: spacing.spacingXl }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isRefreshing}
-                        onRefresh={handleRefresh}
-                        tintColor={colors.mutedText}
-                    />
-                }
-                onEndReached={handleLoadMore}
-                onEndReachedThreshold={0.5}
-            />
         </SafeAreaView>
     );
 }
@@ -222,11 +70,6 @@ export default function Feed() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    centered: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     header: {
         flexDirection: 'row',
@@ -250,10 +93,9 @@ const styles = StyleSheet.create({
         height: 34,
         width: 120,
     },
-    footer: {
-        alignItems: 'center',
-    },
-    emptyContainer: {
+    content: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
     },
 });

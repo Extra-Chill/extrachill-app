@@ -23,7 +23,7 @@ extrachill-app/
 ├── src/
 │   ├── api/client.ts          # API client + token refresh
 │   ├── auth/                  # Auth context + SecureStore
-│   ├── components/            # UI components (ActivityCard, DrawerContent, etc.)
+│   ├── components/            # UI components (DrawerContent, Avatar, etc.)
 │   ├── theme/                 # Theme tokens + context
 │   ├── utils/
 │   └── types/api.ts           # API response types
@@ -46,10 +46,6 @@ The app calls the Extra Chill REST API at `https://extrachill.com/wp-json/extrac
 - `GET /config/oauth`
 - `GET`/`POST /users/onboarding`
 - `POST /auth/browser-handoff` (creates one-time web session handoff URLs)
-
-### Activity feed
-
-- `GET /activity` (cursor pagination; app uses `cursor` + `limit`)
 
 ### Device tracking
 

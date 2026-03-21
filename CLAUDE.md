@@ -53,11 +53,4 @@
 - Requires authenticated request
 - Body: `device_id`
 
-#### Activity feed
 
-**GET /activity**
-- Requires authenticated request
-- App uses: `cursor`, `limit`
-- Response: `{ items: ActivityItem[], next_cursor: number | null }`
-
-`ActivityItem` and related types are defined in `src/types/api.ts`.

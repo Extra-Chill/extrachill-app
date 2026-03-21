@@ -20,15 +20,6 @@ export type {
   OnboardingStatusResponse,
   OnboardingSubmitResponse,
 
-  // Activity
-  ActivityObject,
-  ActivityCardData,
-  ActivityTaxonomyTerm,
-  ActivityItemData,
-  ActivityItem,
-  ActivityResponse,
-  HydratedObject,
-
   // Common
   ApiErrorResponse as ApiError,
 } from '@extrachill/api-client';
