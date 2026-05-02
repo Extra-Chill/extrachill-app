@@ -9,6 +9,16 @@
  * helpers unwrap the envelope so callers receive the value directly.
  *
  * Auth is handled by AuthFetchTransport (Bearer token from secure storage).
+ *
+ * TODO(M7.2.5): replace `transport` import with useAuth().client from
+ * wp-native-shell, and convert executeAbility / queryAbility to a hook
+ * (useExecuteAbility) called from inside components. The current
+ * implementation depends on `src/api/client.ts` which gets deleted
+ * when <WPNativeApp/> mounts — wp-native-shell's AuthProvider builds
+ * its own AuthFetchTransport from config.tokenStorage.
+ *
+ * Until M7.2.5 lands, this file uses the global `transport` because
+ * the wp-native AuthProvider isn't mounted yet.
  */
 
 import { transport } from './client';
