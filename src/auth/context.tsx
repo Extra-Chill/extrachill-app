@@ -11,8 +11,9 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
-import type { AuthMeResponse, OAuthConfigResponse } from '../types/api';
+import type { AuthMeResponse, OAuthConfigResponse, OnboardingStatusResponse, OnboardingSubmitResponse } from '../types/api';
 import { api, transport } from '../api/client';
+import { executeAbility, queryAbility } from '../api/abilities';
 import { getDeviceId } from './storage';
 
 let googleSignInModule: typeof import('@react-native-google-signin/google-signin') | null = null;
@@ -119,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         try {
             const user = await api.auth.me();
-            const onboardingStatus = await api.users.getOnboardingStatus();
+            const onboardingStatus = await queryAbility<OnboardingStatusResponse>('extrachill/get-onboarding-status');
             setState({
                 user,
                 isLoading: false,
@@ -156,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const [me, onboardingStatus] = await Promise.all([
             api.auth.me(),
-            api.users.getOnboardingStatus(),
+            queryAbility<OnboardingStatusResponse>('extrachill/get-onboarding-status'),
         ]);
 
         setState(prev => ({
@@ -239,7 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const [me, onboardingStatus] = await Promise.all([
                 api.auth.me(),
-                api.users.getOnboardingStatus(),
+                queryAbility<OnboardingStatusResponse>('extrachill/get-onboarding-status'),
             ]);
 
             setState(prev => ({
@@ -274,7 +275,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userIsArtist: boolean,
         userIsProfessional: boolean
     ) => {
-        const response = await api.users.submitOnboarding({
+        const response = await executeAbility<OnboardingSubmitResponse>('extrachill/complete-onboarding', {
             username,
             user_is_artist: userIsArtist,
             user_is_professional: userIsProfessional,

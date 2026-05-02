@@ -16,7 +16,8 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/auth/context';
 import { useTheme } from '../src/theme/context';
-import { api } from '../src/api/client';
+import { queryAbility } from '../src/api/abilities';
+import type { OnboardingStatusResponse } from '../src/types/api';
 
 import { Button, TextInput, Notice, Checkbox } from '../src/components';
 
@@ -35,7 +36,7 @@ export default function Onboarding() {
     useEffect(() => {
         const fetchOnboardingStatus = async () => {
             try {
-                const status = await api.users.getOnboardingStatus();
+                const status = await queryAbility<OnboardingStatusResponse>('extrachill/get-onboarding-status');
                 setUsername(status.fields.username);
                 setIsArtist(status.fields.user_is_artist);
                 setIsProfessional(status.fields.user_is_professional);
