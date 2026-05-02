@@ -4,6 +4,10 @@
 
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
+import type {
+  TokenStorageAdapter,
+  StoredTokens as ShellStoredTokens,
+} from 'wp-native-shell';
 
 const KEYS = {
     ACCESS_TOKEN: 'access_token',
@@ -60,3 +64,34 @@ export async function clearTokens(): Promise<void> {
         SecureStore.deleteItemAsync(KEYS.ACCESS_EXPIRY),
     ]);
 }
+
+/**
+ * Adapter that wraps EC's expo-secure-store helpers into wp-native-shell's
+ * TokenStorageAdapter interface. Used by extrachill.config.ts.
+ */
+export const secureStoreAdapter: TokenStorageAdapter = {
+    load: async (): Promise<ShellStoredTokens | null> => {
+        const tokens = await getTokens();
+        if (
+            !tokens.accessToken ||
+            !tokens.refreshToken ||
+            tokens.accessExpiresAt === null
+        ) {
+            return null;
+        }
+        return {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            accessExpiresAt: tokens.accessExpiresAt,
+        };
+    },
+    save: async (tokens: ShellStoredTokens): Promise<void> => {
+        await storeTokens(
+            tokens.accessToken,
+            tokens.refreshToken,
+            tokens.accessExpiresAt,
+        );
+    },
+    clear: clearTokens,
+    getDeviceId,
+};
