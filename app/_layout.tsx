@@ -1,11 +1,20 @@
 /**
- * Root layout - wraps app with providers and loads fonts
+ * Root layout — mounts wp-native-shell's <WPNativeApp/> provider stack.
+ *
+ * WPNativeApp composes (outer → inner):
+ *   ThemeProvider → AuthProvider → NavigationConfigProvider →
+ *   BrowserHandoffProvider → AuthGate → {children}
+ *
+ * AuthGate intercepts unauthenticated users and renders LoginScreen.
+ * Authenticated users see expo-router's <Slot/> which renders the
+ * matched child route (index, onboarding, or the drawer group).
  */
 
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { AuthProvider } from '../src/auth/context';
-import { ThemeProvider } from '../src/theme/context';
+import { WPNativeApp } from 'wp-native-shell';
+import { config } from '../extrachill.config';
+import LoginScreen from './login';
 
 export default function RootLayout() {
     const [fontsLoaded] = useFonts({
@@ -18,10 +27,8 @@ export default function RootLayout() {
     }
 
     return (
-        <ThemeProvider>
-            <AuthProvider>
-                <Stack screenOptions={{ headerShown: false }} />
-            </AuthProvider>
-        </ThemeProvider>
+        <WPNativeApp config={config} loginScreen={LoginScreen}>
+            <Slot />
+        </WPNativeApp>
     );
 }

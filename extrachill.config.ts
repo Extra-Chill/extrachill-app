@@ -2,24 +2,20 @@
  * extrachill.config.ts — Extra Chill app config for wp-native-shell.
  *
  * Consumed by <WPNativeApp config={config}/> in app/_layout.tsx (M7.2.5).
- * Until then, this file is dormant — its presence verifies the SHELL.md
- * contract type-checks against EC's specifics.
+ *
+ * The 0.1.0 surface dropped `brand` and `onboarding` from WPNativeConfig.
+ * Brand strings are consumer-managed inline. Onboarding gating is
+ * consumer-side — extrachill-app handles it in app/index.tsx by querying
+ * the `extrachill/get-onboarding-status` ability directly.
  */
 
 import type { WPNativeConfig, AuthState } from 'wp-native-shell';
 import { secureStoreAdapter } from './src/auth/storage';
-import OnboardingScreen from './app/onboarding';
 
 export const config: WPNativeConfig = {
   api: {
     baseUrl: 'https://extrachill.com/wp-json',
     clientId: 'extrachill-app',
-    defaultHeaders: { 'ExtraChill-Client': 'app' },
-  },
-
-  brand: {
-    name: 'Extra Chill',
-    welcomeMessage: 'Welcome to Extra Chill',
   },
 
   tokenStorage: secureStoreAdapter,
@@ -45,23 +41,17 @@ export const config: WPNativeConfig = {
     handoffAbility: 'wp-native/auth-browser-handoff',
   },
 
-  // Theme overrides — pull EC-specific tokens, fall back to defaults
-  // for everything else. Spread merges via wp-native-shell's
-  // deepMergeTokens at runtime.
+  // Theme overrides — only override what we need; wp-native-shell's
+  // deepMergeTokens fills in defaults for everything else.
+  // TODO(M7.2): pull color tokens from @extrachill/tokens when the
+  // migration lands. For now, leave default colors from wp-native-shell.
   theme: {
-    colors: {
-      // TODO(M7.2): pull from @extrachill/tokens when the migration lands.
-      // For now, leave defaults from wp-native-shell.
-    },
     typography: {
       fontFamily: 'WilcoLoftSans',
       fontFamilyBold: 'WilcoLoftSans-Bold',
+      fontSizeBase: 16,
+      fontSizes: { xs: 12, sm: 14, base: 16, lg: 18, xl: 20, '2xl': 24 },
+      lineHeights: { tight: 1.2, normal: 1.5, relaxed: 1.75 },
     },
-  },
-
-  onboarding: {
-    enabled: true,
-    ability: 'extrachill/complete-onboarding',
-    screen: OnboardingScreen,
   },
 };

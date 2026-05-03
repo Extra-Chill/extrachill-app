@@ -1,55 +1,26 @@
 /**
  * Drawer layout for authenticated app surfaces.
- * 
- * Protects all routes in this group - redirects to login if not authenticated.
+ *
+ * Auth gating moved to WPNativeApp's AuthGate — this component
+ * unconditionally renders the drawer. If the user isn't authenticated,
+ * AuthGate intercepts before this layout even mounts.
+ *
+ * Uses wp-native-shell's DrawerContent for the drawer menu items.
+ * EC's custom DrawerContent (src/components/DrawerContent.tsx) is
+ * kept alive for now but no longer mounted — M7.2.9 deletes it.
  */
 
-import { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Drawer } from 'expo-router/drawer';
-import { useRouter } from 'expo-router';
-import { useAuth } from '../../src/auth/context';
-import { useTheme } from '../../src/theme/context';
-import { DrawerContent } from '../../src/components/DrawerContent';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { DrawerContent } from 'wp-native-shell';
 
 export default function DrawerLayout() {
-    const router = useRouter();
-    const { isLoading, isAuthenticated } = useAuth();
-    const { colors } = useTheme();
-
-    useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
-            router.replace('/login');
-        }
-    }, [isLoading, isAuthenticated, router]);
-
-    if (isLoading) {
-        return (
-            <View style={[styles.loading, { backgroundColor: colors.backgroundColor }]}>
-                <ActivityIndicator size="large" color={colors.textColor} />
-            </View>
-        );
-    }
-
-    if (!isAuthenticated) {
-        return null;
-    }
-
     return (
-        <Drawer
-            screenOptions={{
-                headerShown: false,
-                drawerType: 'front',
-            }}
-            drawerContent={(props) => <DrawerContent {...props} />}
-        />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <Drawer
+                drawerContent={(props) => <DrawerContent {...props} />}
+                screenOptions={{ headerShown: false, drawerType: 'front' }}
+            />
+        </GestureHandlerRootView>
     );
 }
-
-const styles = StyleSheet.create({
-    loading: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-});

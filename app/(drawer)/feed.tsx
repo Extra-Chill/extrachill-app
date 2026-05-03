@@ -11,28 +11,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import type { ParamListBase } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
-import { useAuth } from '../../src/auth/context';
-import { useTheme } from '../../src/theme/context';
+import { useAuth, useTheme } from 'wp-native-shell';
 import { Avatar } from '../../src/components';
 
 export default function Feed() {
     const navigation = useNavigation<DrawerNavigationProp<ParamListBase>>();
     const { user } = useAuth();
-    const { colors, spacing, fontSize, fontFamily } = useTheme();
+    const theme = useTheme();
 
     const openDrawer = () => {
         navigation.openDrawer();
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundColor }]} edges={['top']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
             <View
                 style={[
                     styles.header,
                     {
-                        backgroundColor: colors.headerBackground,
-                        paddingHorizontal: spacing.spacingMd,
-                        paddingVertical: spacing.spacingSm,
+                        backgroundColor: theme.colors.surface,
+                        paddingHorizontal: theme.spacing.md,
+                        paddingVertical: theme.spacing.sm,
                     },
                 ]}
             >
@@ -51,12 +50,12 @@ export default function Feed() {
                 <View style={styles.headerRight} />
             </View>
 
-            <View style={[styles.content, { padding: spacing.spacingXl }]}>
+            <View style={[styles.content, { padding: theme.spacing.xl }]}>
                 <Text
                     style={{
-                        color: colors.mutedText,
-                        fontSize: fontSize.fontSizeBase,
-                        fontFamily: fontFamily.body,
+                        color: theme.colors.textMuted,
+                        fontSize: theme.typography.fontSizes.base,
+                        fontFamily: theme.typography.fontFamily,
                         textAlign: 'center',
                     }}
                 >

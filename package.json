@@ -35,7 +35,7 @@
     "react-native-svg": "15.12.1",
     "react-native-worklets": "0.5.1",
     "wp-native-client": "^0.0.1",
-    "wp-native-shell": "^0.0.1"
+    "wp-native-shell": "^0.1.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
