@@ -19,7 +19,7 @@ import {
     ViewStyle,
     TextStyle,
 } from 'react-native';
-import { useTheme } from '../theme/context';
+import { useTheme } from 'wp-native-shell';
 
 type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'danger';
 type ButtonSize = 'small' | 'medium' | 'large';
@@ -41,41 +41,41 @@ export function Button({
     disabled = false,
     loading = false,
 }: ButtonProps) {
-    const { colors, spacing, borderRadius, fontSize, fontFamily } = useTheme();
+    const theme = useTheme();
 
     const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = {
         primary: {
             container: {
-                backgroundColor: colors.accent3,
+                backgroundColor: theme.colors.primary,
             },
             text: {
-                color: colors.buttonTextColor,
+                color: theme.colors.onPrimary,
             },
         },
         secondary: {
             container: {
-                backgroundColor: colors.accent,
+                backgroundColor: theme.colors.success,
             },
             text: {
-                color: colors.buttonTextColor,
+                color: theme.colors.onPrimary,
             },
         },
         tertiary: {
             container: {
-                backgroundColor: colors.cardBackground,
+                backgroundColor: theme.colors.surface,
                 borderWidth: 1,
-                borderColor: colors.borderColor,
+                borderColor: theme.colors.border,
             },
             text: {
-                color: colors.mutedText,
+                color: theme.colors.textMuted,
             },
         },
         danger: {
             container: {
-                backgroundColor: colors.errorColor,
+                backgroundColor: theme.colors.error,
             },
             text: {
-                color: colors.buttonTextColor,
+                color: theme.colors.onPrimary,
             },
         },
     };
@@ -83,29 +83,29 @@ export function Button({
     const sizeStyles: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> = {
         small: {
             container: {
-                paddingVertical: spacing.spacingSm,
-                paddingHorizontal: spacing.spacingMd,
+                paddingVertical: theme.spacing.sm,
+                paddingHorizontal: theme.spacing.md,
             },
             text: {
-                fontSize: fontSize.fontSizeSm,
+                fontSize: theme.typography.fontSizes.sm,
             },
         },
         medium: {
             container: {
-                paddingVertical: spacing.spacingSm,
-                paddingHorizontal: spacing.spacingMd,
+                paddingVertical: theme.spacing.sm,
+                paddingHorizontal: theme.spacing.md,
             },
             text: {
-                fontSize: fontSize.fontSizeBase,
+                fontSize: theme.typography.fontSizes.base,
             },
         },
         large: {
             container: {
-                paddingVertical: spacing.spacingMd,
-                paddingHorizontal: spacing.spacingLg,
+                paddingVertical: theme.spacing.md,
+                paddingHorizontal: theme.spacing.lg,
             },
             text: {
-                fontSize: fontSize.fontSizeBody,
+                fontSize: theme.typography.fontSizes.base,
             },
         },
     };
@@ -116,7 +116,7 @@ export function Button({
         <TouchableOpacity
             style={[
                 styles.container,
-                { borderRadius: borderRadius.borderRadiusSm },
+                { borderRadius: theme.radii.sm },
                 variantStyles[variant].container,
                 sizeStyles[size].container,
                 isDisabled && styles.disabled,
@@ -136,7 +136,7 @@ export function Button({
                         styles.text,
                         variantStyles[variant].text,
                         sizeStyles[size].text,
-                        { fontFamily: fontFamily.body },
+                        { fontFamily: theme.typography.fontFamily },
                     ]}
                 >
                     {children}

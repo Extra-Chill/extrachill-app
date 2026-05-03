@@ -10,7 +10,7 @@ import {
     StyleSheet,
     TextInputProps as RNTextInputProps,
 } from 'react-native';
-import { useTheme } from '../theme/context';
+import { useTheme } from 'wp-native-shell';
 
 interface TextInputProps extends Omit<RNTextInputProps, 'style'> {
     label?: string;
@@ -22,13 +22,13 @@ export function TextInput({
     error,
     ...props
 }: TextInputProps) {
-    const { colors, spacing, borderRadius, fontSize, fontFamily } = useTheme();
+    const theme = useTheme();
     const [isFocused, setIsFocused] = useState(false);
 
     return (
         <View style={styles.container}>
             {label && (
-                <Text style={[styles.label, { color: colors.textColor, fontSize: fontSize.fontSizeBase, fontFamily: fontFamily.body }]}>
+                <Text style={[styles.label, { color: theme.colors.text, fontSize: theme.typography.fontSizes.base, fontFamily: theme.typography.fontFamily }]}>
                     {label}
                 </Text>
             )}
@@ -36,16 +36,16 @@ export function TextInput({
                 style={[
                     styles.input,
                     {
-                        borderColor: error ? colors.errorColor : isFocused ? colors.accent : colors.borderColor,
-                        borderRadius: borderRadius.borderRadiusMd,
-                        paddingHorizontal: spacing.spacingMd,
-                        fontSize: fontSize.fontSizeBase,
-                        fontFamily: fontFamily.body,
-                        color: colors.textColor,
-                        backgroundColor: colors.backgroundColor,
+                        borderColor: error ? theme.colors.error : isFocused ? theme.colors.primary : theme.colors.border,
+                        borderRadius: theme.radii.md,
+                        paddingHorizontal: theme.spacing.md,
+                        fontSize: theme.typography.fontSizes.base,
+                        fontFamily: theme.typography.fontFamily,
+                        color: theme.colors.text,
+                        backgroundColor: theme.colors.background,
                     },
                 ]}
-                placeholderTextColor={colors.mutedText}
+                placeholderTextColor={theme.colors.textMuted}
                 onFocus={(e) => {
                     setIsFocused(true);
                     props.onFocus?.(e);
@@ -57,7 +57,7 @@ export function TextInput({
                 {...props}
             />
             {error && (
-                <Text style={[styles.error, { color: colors.errorColor, fontSize: fontSize.fontSizeSm }]}>
+                <Text style={[styles.error, { color: theme.colors.error, fontSize: theme.typography.fontSizes.sm }]}>
                     {error}
                 </Text>
             )}
