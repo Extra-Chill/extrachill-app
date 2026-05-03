@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/auth/context';
+import { useGoogleAuth } from '../src/auth/oauth';
 import { useTheme } from '../src/theme/context';
 import { Button, TextInput, Notice, GoogleSignInButton } from '../src/components';
 
@@ -21,7 +22,8 @@ type AuthMode = 'login' | 'register';
 
 export default function Login() {
     const router = useRouter();
-    const { login, register, loginWithGoogle, sessionExpired, clearSessionExpired, onboardingCompleted, googleEnabled } = useAuth();
+    const { login, register, sessionExpired, clearSessionExpired, onboardingCompleted, refreshUser } = useAuth();
+    const { loginWithGoogle, googleEnabled } = useGoogleAuth();
     const { colors, spacing, fontSize, fontFamily } = useTheme();
 
     const [mode, setMode] = useState<AuthMode>('login');
@@ -107,6 +109,8 @@ export default function Login() {
 
         try {
             const result = await loginWithGoogle();
+            // Tokens are stored by loginWithGoogle; sync AuthProvider state
+            await refreshUser();
             if (result.onboardingCompleted) {
                 router.replace('/(drawer)/feed');
             } else {
