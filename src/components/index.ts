@@ -8,4 +8,3 @@ export { Notice } from './Notice';
 export { Checkbox } from './Checkbox';
 export { GoogleSignInButton } from './GoogleSignInButton';
 export { Avatar } from './Avatar';
-export { DrawerContent } from './DrawerContent';

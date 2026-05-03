@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useTheme } from '../theme/context';
+import { useTheme } from 'wp-native-shell';
 
 interface AvatarProps {
     url?: string;
@@ -13,7 +13,7 @@ interface AvatarProps {
 }
 
 export function Avatar({ url, size = 32, onPress }: AvatarProps) {
-    const { colors } = useTheme();
+    const theme = useTheme();
 
     const avatar = (
         <View
@@ -23,8 +23,8 @@ export function Avatar({ url, size = 32, onPress }: AvatarProps) {
                     width: size,
                     height: size,
                     borderRadius: size / 2,
-                    backgroundColor: colors.cardBackground,
-                    borderColor: colors.borderColor,
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
                 },
             ]}
         >

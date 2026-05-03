@@ -10,7 +10,7 @@
 
 import React from 'react';
 import { Pressable, View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../theme/context';
+import { useTheme } from 'wp-native-shell';
 
 interface CheckboxProps {
     label: string;
@@ -20,7 +20,7 @@ interface CheckboxProps {
 }
 
 export function Checkbox({ label, checked, onPress, disabled = false }: CheckboxProps) {
-    const { colors, spacing, borderRadius, fontSize, fontFamily } = useTheme();
+    const theme = useTheme();
 
     return (
         <Pressable
@@ -32,9 +32,9 @@ export function Checkbox({ label, checked, onPress, disabled = false }: Checkbox
                 style={[
                     styles.box,
                     {
-                        borderColor: checked ? colors.accent : colors.borderColor,
-                        borderRadius: borderRadius.borderRadiusSm,
-                        backgroundColor: checked ? colors.accent : colors.backgroundColor,
+                        borderColor: checked ? theme.colors.primary : theme.colors.border,
+                        borderRadius: theme.radii.sm,
+                        backgroundColor: checked ? theme.colors.primary : theme.colors.background,
                     },
                     disabled && styles.disabled,
                 ]}
@@ -45,10 +45,10 @@ export function Checkbox({ label, checked, onPress, disabled = false }: Checkbox
                 style={[
                     styles.label,
                     {
-                        color: disabled ? colors.mutedText : colors.textColor,
-                        fontSize: fontSize.fontSizeBase,
-                        fontFamily: fontFamily.body,
-                        marginLeft: spacing.spacingSm,
+                        color: disabled ? theme.colors.textMuted : theme.colors.text,
+                        fontSize: theme.typography.fontSizes.base,
+                        fontFamily: theme.typography.fontFamily,
+                        marginLeft: theme.spacing.sm,
                     },
                     disabled && styles.disabled,
                 ]}

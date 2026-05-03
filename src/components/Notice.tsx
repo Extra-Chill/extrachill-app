@@ -10,7 +10,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../theme/context';
+import { useTheme } from 'wp-native-shell';
 
 type NoticeType = 'success' | 'info' | 'error';
 
@@ -21,12 +21,12 @@ interface NoticeProps {
 }
 
 export function Notice({ type, message, title }: NoticeProps) {
-    const { colors, spacing, borderRadius, fontSize } = useTheme();
+    const theme = useTheme();
 
     const borderColors: Record<NoticeType, string> = {
-        success: colors.accent,
-        info: colors.accent2,
-        error: colors.errorColor,
+        success: theme.colors.success,
+        info: theme.colors.primary,
+        error: theme.colors.error,
     };
 
     return (
@@ -34,11 +34,11 @@ export function Notice({ type, message, title }: NoticeProps) {
             style={[
                 styles.container,
                 {
-                    backgroundColor: colors.noticeBg,
+                    backgroundColor: theme.colors.surface,
                     borderLeftColor: borderColors[type],
-                    borderRadius: borderRadius.borderRadiusMd,
-                    padding: spacing.spacingMd,
-                    marginBottom: spacing.spacingMd,
+                    borderRadius: theme.radii.md,
+                    padding: theme.spacing.md,
+                    marginBottom: theme.spacing.md,
                 },
             ]}
         >
@@ -46,7 +46,7 @@ export function Notice({ type, message, title }: NoticeProps) {
                 <Text
                     style={[
                         styles.title,
-                        { color: colors.textColor, fontSize: fontSize.fontSizeBase },
+                        { color: theme.colors.text, fontSize: theme.typography.fontSizes.base },
                     ]}
                 >
                     {title}
@@ -55,7 +55,7 @@ export function Notice({ type, message, title }: NoticeProps) {
             <Text
                 style={[
                     styles.message,
-                    { color: colors.textColor, fontSize: fontSize.fontSizeSm },
+                    { color: theme.colors.text, fontSize: theme.typography.fontSizes.sm },
                 ]}
             >
                 {message}

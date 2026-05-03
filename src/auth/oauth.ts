@@ -5,15 +5,46 @@
  * loginWithGoogle action. The REST route for Google login still uses
  * @extrachill/api-client — that retires in M8.
  *
- * Consumers call useGoogleAuth() alongside useAuth() from context.tsx.
+ * Consumers call useGoogleAuth() alongside useAuth() from wp-native-shell.
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
-import type { OAuthConfigResponse, OnboardingStatusResponse } from '../types/api';
-import { api, transport } from '../api/client';
-import { queryAbility } from '../api/abilities';
-import { getDeviceId } from './storage';
+import type { OAuthConfigResponse, OnboardingStatusResponse, StoredTokens } from '@extrachill/api-client';
+import { ExtraChillClient, AuthFetchTransport } from '@extrachill/api-client';
+import { useAuth } from 'wp-native-shell';
+import { storeTokens, getTokens, clearTokens, getDeviceId } from './storage';
+
+// ─── Module-level EC REST client (Google OAuth REST routes) ─────────────────
+// @extrachill/api-client is used here for EC-specific REST endpoints
+// (getOAuthConfig, loginWithGoogle) that aren't wp-native abilities.
+// This retires in M8 when those flows move to abilities.
+
+const ecTransport = new AuthFetchTransport({
+    baseUrl: 'https://extrachill.com/wp-json',
+    getDeviceId,
+    defaultHeaders: { 'ExtraChill-Client': 'app' },
+
+    loadTokens: async (): Promise<StoredTokens | null> => {
+        const tokens = await getTokens();
+        if (!tokens.accessToken || !tokens.refreshToken || tokens.accessExpiresAt === null) {
+            return null;
+        }
+        return {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            accessExpiresAt: tokens.accessExpiresAt,
+        };
+    },
+
+    saveTokens: async (tokens: StoredTokens): Promise<void> => {
+        await storeTokens(tokens.accessToken, tokens.refreshToken, tokens.accessExpiresAt);
+    },
+
+    clearTokens,
+});
+
+const ecApi = new ExtraChillClient(ecTransport);
 
 // ─── Module-level singletons ────────────────────────────────────────────────
 
@@ -95,13 +126,14 @@ export interface GoogleAuthActions {
  */
 export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
     const [googleEnabled, setGoogleEnabled] = useState(false);
+    const { client } = useAuth();
 
     useEffect(() => {
         let cancelled = false;
 
         async function fetchOAuthConfig() {
             try {
-                oauthConfigCache = await api.auth.getOAuthConfig();
+                oauthConfigCache = await ecApi.auth.getOAuthConfig();
                 if (!cancelled) {
                     setGoogleEnabled(oauthConfigCache.google.enabled);
                 }
@@ -138,20 +170,20 @@ export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
             }
 
             const deviceId = await getDeviceId();
-            const authResponse = await api.auth.loginWithGoogle({
+            const authResponse = await ecApi.auth.loginWithGoogle({
                 id_token: idToken,
                 device_id: deviceId,
                 registration_source: 'extrachill-app',
                 registration_method: 'google',
             });
 
-            await transport.setTokens({
+            await ecTransport.setTokens({
                 accessToken: authResponse.access_token,
                 refreshToken: authResponse.refresh_token,
                 accessExpiresAt: parseExpiresAt(authResponse.access_expires_at),
             });
 
-            const onboardingStatus = await queryAbility<OnboardingStatusResponse>(
+            const onboardingStatus = await client.execute<OnboardingStatusResponse>(
                 'extrachill/get-onboarding-status',
             );
 
@@ -171,7 +203,7 @@ export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
             }
             throw error;
         }
-    }, []);
+    }, [client]);
 
     return { googleEnabled, loginWithGoogle };
 }

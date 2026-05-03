@@ -14,7 +14,7 @@ import {
     StyleSheet,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { useTheme } from '../theme/context';
+import { useTheme } from 'wp-native-shell';
 
 interface GoogleSignInButtonProps {
     onPress: () => void;
@@ -50,7 +50,7 @@ export function GoogleSignInButton({
     disabled = false,
     loading = false,
 }: GoogleSignInButtonProps) {
-    const { spacing, borderRadius, fontSize, fontFamily } = useTheme();
+    const theme = useTheme();
 
     const isDisabled = disabled || loading;
 
@@ -59,9 +59,9 @@ export function GoogleSignInButton({
             style={[
                 styles.container,
                 {
-                    borderRadius: borderRadius.borderRadiusSm,
-                    paddingVertical: spacing.spacingMd,
-                    paddingHorizontal: spacing.spacingLg,
+                    borderRadius: theme.radii.sm,
+                    paddingVertical: theme.spacing.md,
+                    paddingHorizontal: theme.spacing.lg,
                 },
                 isDisabled && styles.disabled,
             ]}
@@ -80,8 +80,8 @@ export function GoogleSignInButton({
                         style={[
                             styles.text,
                             {
-                                fontSize: fontSize.fontSizeBody,
-                                fontFamily: fontFamily.body,
+                                fontSize: theme.typography.fontSizes.base,
+                                fontFamily: theme.typography.fontFamily,
                             },
                         ]}
                     >
