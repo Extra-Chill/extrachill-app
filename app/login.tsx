@@ -1,5 +1,12 @@
 /**
- * Unified auth screen - handles both login and registration
+ * Unified auth screen — handles both login and registration.
+ *
+ * Uses wp-native-shell's useAuth() for login/register actions and
+ * useGoogleAuth() from src/auth/oauth for Google Sign-In.
+ *
+ * After successful auth, queries `extrachill/get-onboarding-status`
+ * via shell's client to determine whether to redirect to onboarding
+ * or the feed.
  */
 
 import { useState, useEffect } from 'react';
@@ -13,18 +20,48 @@ import {
     Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../src/auth/context';
+import { useAuth, useTheme } from 'wp-native-shell';
 import { useGoogleAuth } from '../src/auth/oauth';
-import { useTheme } from '../src/theme/context';
 import { Button, TextInput, Notice, GoogleSignInButton } from '../src/components';
 
 type AuthMode = 'login' | 'register';
 
+interface OnboardingStatusResult {
+    completed: boolean;
+    fields: {
+        username: string;
+        user_is_artist: boolean;
+        user_is_professional: boolean;
+    };
+}
+
+/**
+ * Query onboarding status and navigate to the right screen.
+ * Falls back to feed on error (don't lock users out).
+ */
+async function navigatePostAuth(
+    client: ReturnType<typeof useAuth>['client'],
+    router: ReturnType<typeof useRouter>,
+): Promise<void> {
+    try {
+        const status = await client.execute<OnboardingStatusResult>(
+            'extrachill/get-onboarding-status',
+        );
+        if (status.completed) {
+            router.replace('/(drawer)/feed');
+        } else {
+            router.replace('/onboarding');
+        }
+    } catch {
+        router.replace('/(drawer)/feed');
+    }
+}
+
 export default function Login() {
     const router = useRouter();
-    const { login, register, sessionExpired, clearSessionExpired, onboardingCompleted, refreshUser } = useAuth();
+    const { login, register, sessionExpired, clearSessionExpired, client, refreshSession } = useAuth();
     const { loginWithGoogle, googleEnabled } = useGoogleAuth();
-    const { colors, spacing, fontSize, fontFamily } = useTheme();
+    const theme = useTheme();
 
     const [mode, setMode] = useState<AuthMode>('login');
     const [email, setEmail] = useState('');
@@ -61,11 +98,7 @@ export default function Login() {
             setIsSubmitting(true);
             try {
                 await login(email.trim(), password);
-                if (onboardingCompleted) {
-                    router.replace('/(drawer)/feed');
-                } else {
-                    router.replace('/onboarding');
-                }
+                await navigatePostAuth(client, router);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Login failed');
             } finally {
@@ -89,12 +122,8 @@ export default function Login() {
 
             setIsSubmitting(true);
             try {
-                const result = await register(email.trim(), password, passwordConfirm);
-                if (result.onboardingCompleted) {
-                    router.replace('/(drawer)/feed');
-                } else {
-                    router.replace('/onboarding');
-                }
+                await register(email.trim(), password, passwordConfirm);
+                await navigatePostAuth(client, router);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Registration failed');
             } finally {
@@ -109,8 +138,8 @@ export default function Login() {
 
         try {
             const result = await loginWithGoogle();
-            // Tokens are stored by loginWithGoogle; sync AuthProvider state
-            await refreshUser();
+            // Tokens stored by loginWithGoogle; sync shell's AuthProvider state.
+            await refreshSession();
             if (result.onboardingCompleted) {
                 router.replace('/(drawer)/feed');
             } else {
@@ -130,23 +159,23 @@ export default function Login() {
 
     return (
         <KeyboardAvoidingView
-            style={[styles.container, { backgroundColor: colors.backgroundColor }]}
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <View style={[styles.content, { paddingHorizontal: spacing.spacingXl }]}>
+            <View style={[styles.content, { paddingHorizontal: theme.spacing.xl }]}>
                 <Image
                     source={require('../assets/logo.png')}
-                    style={[styles.logo, { marginBottom: spacing.spacingLg }]}
+                    style={[styles.logo, { marginBottom: theme.spacing.lg }]}
                     resizeMode="contain"
                 />
                 <Text
                     style={[
                         styles.subtitle,
-                        { 
-                            color: colors.mutedText, 
-                            fontSize: fontSize.fontSizeBase, 
-                            marginBottom: spacing.spacingXl,
-                            fontFamily: fontFamily.body,
+                        {
+                            color: theme.colors.textMuted,
+                            fontSize: theme.typography.fontSizes.base,
+                            marginBottom: theme.spacing.xl,
+                            fontFamily: theme.typography.fontFamily,
                         },
                     ]}
                 >
@@ -191,7 +220,7 @@ export default function Login() {
                     />
                 )}
 
-                <View style={{ marginTop: spacing.spacingSm }}>
+                <View style={{ marginTop: theme.spacing.sm }}>
                     <Button
                         variant="secondary"
                         size="large"
@@ -204,17 +233,17 @@ export default function Login() {
                 </View>
 
                 {googleEnabled && (
-                    <View style={[styles.dividerContainer, { marginTop: spacing.spacingLg }]}>
-                        <View style={[styles.dividerLine, { backgroundColor: colors.borderColor }]} />
-                        <Text style={[styles.dividerText, { color: colors.mutedText, fontFamily: fontFamily.body }]}>
+                    <View style={[styles.dividerContainer, { marginTop: theme.spacing.lg }]}>
+                        <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+                        <Text style={[styles.dividerText, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>
                             or
                         </Text>
-                        <View style={[styles.dividerLine, { backgroundColor: colors.borderColor }]} />
+                        <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
                     </View>
                 )}
 
                 {googleEnabled && (
-                    <View style={{ marginTop: spacing.spacingLg }}>
+                    <View style={{ marginTop: theme.spacing.lg }}>
                         <GoogleSignInButton
                             onPress={handleGoogleSignIn}
                             loading={isGoogleLoading}
@@ -223,12 +252,12 @@ export default function Login() {
                     </View>
                 )}
 
-                <View style={[styles.toggleContainer, { marginTop: spacing.spacingLg }]}>
-                    <Text style={[styles.toggleText, { color: colors.mutedText, fontFamily: fontFamily.body }]}>
+                <View style={[styles.toggleContainer, { marginTop: theme.spacing.lg }]}>
+                    <Text style={[styles.toggleText, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>
                         {isLogin ? "Don't have an account? " : 'Already have an account? '}
                     </Text>
                     <Pressable onPress={() => switchMode(isLogin ? 'register' : 'login')} disabled={isAnyLoading}>
-                        <Text style={[styles.toggleLink, { color: colors.accent, fontFamily: fontFamily.body }]}>
+                        <Text style={[styles.toggleLink, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily }]}>
                             {isLogin ? 'Create one' : 'Sign in'}
                         </Text>
                     </Pressable>

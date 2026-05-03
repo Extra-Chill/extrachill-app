@@ -1,7 +1,12 @@
 /**
- * Onboarding screen - username selection and preferences
- * 
- * Shown after registration to set final username and optional artist/professional flags.
+ * Onboarding screen — username selection and preferences.
+ *
+ * Shown after registration to set final username and optional
+ * artist/professional flags.
+ *
+ * Uses wp-native-shell's useAuth().client for ability calls:
+ *   - `extrachill/get-onboarding-status` (initial data load)
+ *   - `extrachill/complete-onboarding` (submit)
  */
 
 import { useState, useEffect } from 'react';
@@ -14,17 +19,29 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../src/auth/context';
-import { useTheme } from '../src/theme/context';
-import { queryAbility } from '../src/api/abilities';
-import type { OnboardingStatusResponse } from '../src/types/api';
+import { useAuth, useTheme } from 'wp-native-shell';
 
 import { Button, TextInput, Notice, Checkbox } from '../src/components';
 
+interface OnboardingStatusResult {
+    completed: boolean;
+    fields: {
+        username: string;
+        user_is_artist: boolean;
+        user_is_professional: boolean;
+    };
+}
+
+interface OnboardingSubmitResult {
+    user: {
+        username: string;
+    };
+}
+
 export default function Onboarding() {
     const router = useRouter();
-    const { completeOnboarding } = useAuth();
-    const { colors, spacing, fontSize, fontFamily } = useTheme();
+    const { client } = useAuth();
+    const theme = useTheme();
 
     const [username, setUsername] = useState('');
     const [isArtist, setIsArtist] = useState(false);
@@ -34,21 +51,32 @@ export default function Onboarding() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        const fetchOnboardingStatus = async () => {
+        let cancelled = false;
+
+        async function fetchOnboardingStatus() {
             try {
-                const status = await queryAbility<OnboardingStatusResponse>('extrachill/get-onboarding-status');
+                const status = await client.execute<OnboardingStatusResult>(
+                    'extrachill/get-onboarding-status',
+                );
+                if (cancelled) return;
+
                 setUsername(status.fields.username);
                 setIsArtist(status.fields.user_is_artist);
                 setIsProfessional(status.fields.user_is_professional);
-            } catch (err) {
-                setError('Failed to load onboarding data');
+            } catch {
+                if (!cancelled) {
+                    setError('Failed to load onboarding data');
+                }
             } finally {
-                setIsLoading(false);
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
             }
-        };
+        }
 
-        fetchOnboardingStatus();
-    }, []);
+        void fetchOnboardingStatus();
+        return () => { cancelled = true; };
+    }, [client]);
 
     const handleSubmit = async () => {
         setError(null);
@@ -78,7 +106,14 @@ export default function Onboarding() {
         setIsSubmitting(true);
 
         try {
-            await completeOnboarding(trimmedUsername, isArtist, isProfessional);
+            await client.execute<OnboardingSubmitResult>(
+                'extrachill/complete-onboarding',
+                {
+                    username: trimmedUsername,
+                    user_is_artist: isArtist,
+                    user_is_professional: isProfessional,
+                },
+            );
             router.replace('/(drawer)/feed');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to complete setup');
@@ -89,26 +124,26 @@ export default function Onboarding() {
 
     if (isLoading) {
         return (
-            <View style={[styles.loadingContainer, { backgroundColor: colors.backgroundColor }]}>
-                <ActivityIndicator size="large" color={colors.textColor} />
+            <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
         );
     }
 
     return (
         <KeyboardAvoidingView
-            style={[styles.container, { backgroundColor: colors.backgroundColor }]}
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <View style={[styles.content, { paddingHorizontal: spacing.spacingXl }]}>
+            <View style={[styles.content, { paddingHorizontal: theme.spacing.xl }]}>
                 <Text
                     style={[
                         styles.title,
                         {
-                            color: colors.textColor,
-                            fontSize: fontSize.fontSizeXl,
-                            fontFamily: fontFamily.heading,
-                            marginBottom: spacing.spacingSm,
+                            color: theme.colors.text,
+                            fontSize: theme.typography.fontSizes.xl,
+                            fontFamily: theme.typography.fontFamilyBold ?? theme.typography.fontFamily,
+                            marginBottom: theme.spacing.sm,
                         },
                     ]}
                 >
@@ -118,10 +153,10 @@ export default function Onboarding() {
                     style={[
                         styles.subtitle,
                         {
-                            color: colors.mutedText,
-                            fontSize: fontSize.fontSizeBase,
-                            fontFamily: fontFamily.body,
-                            marginBottom: spacing.spacingXl,
+                            color: theme.colors.textMuted,
+                            fontSize: theme.typography.fontSizes.base,
+                            fontFamily: theme.typography.fontFamily,
+                            marginBottom: theme.spacing.xl,
                         },
                     ]}
                 >
@@ -134,10 +169,10 @@ export default function Onboarding() {
                     style={[
                         styles.label,
                         {
-                            color: colors.textColor,
-                            fontSize: fontSize.fontSizeBase,
-                            fontFamily: fontFamily.body,
-                            marginBottom: spacing.spacingSm,
+                            color: theme.colors.text,
+                            fontSize: theme.typography.fontSizes.base,
+                            fontFamily: theme.typography.fontFamily,
+                            marginBottom: theme.spacing.sm,
                         },
                     ]}
                 >
@@ -157,18 +192,18 @@ export default function Onboarding() {
                     style={[
                         styles.hint,
                         {
-                            color: colors.mutedText,
-                            fontSize: fontSize.fontSizeSm,
-                            fontFamily: fontFamily.body,
-                            marginTop: -spacing.spacingSm,
-                            marginBottom: spacing.spacingLg,
+                            color: theme.colors.textMuted,
+                            fontSize: theme.typography.fontSizes.sm,
+                            fontFamily: theme.typography.fontFamily,
+                            marginTop: -theme.spacing.sm,
+                            marginBottom: theme.spacing.lg,
                         },
                     ]}
                 >
                     Letters, numbers, hyphens, and underscores only. 3-60 characters.
                 </Text>
 
-                <View style={[styles.checkboxGroup, { marginBottom: spacing.spacingLg }]}>
+                <View style={[styles.checkboxGroup, { marginBottom: theme.spacing.lg }]}>
                     <Checkbox
                         label="I love music"
                         checked={true}

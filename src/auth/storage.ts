@@ -1,13 +1,17 @@
 /**
- * Secure storage helpers for auth tokens and device ID
+ * Secure storage helpers for auth tokens and device ID.
+ *
+ * Provides two things:
+ * 1. Legacy helpers (getDeviceId, storeTokens, etc.) used by EC's
+ *    internal auth code (src/auth/context.tsx, src/auth/oauth.ts).
+ * 2. `secureStoreAdapter` — a TokenStorageAdapter for wp-native-shell.
+ *    Shell 0.1.0 uses a simple key-value interface (getItem/setItem/
+ *    removeItem); the transport layer handles serialisation internally.
  */
 
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-import type {
-  TokenStorageAdapter,
-  StoredTokens as ShellStoredTokens,
-} from 'wp-native-shell';
+import type { TokenStorageAdapter } from 'wp-native-shell';
 
 const KEYS = {
     ACCESS_TOKEN: 'access_token',
@@ -66,32 +70,14 @@ export async function clearTokens(): Promise<void> {
 }
 
 /**
- * Adapter that wraps EC's expo-secure-store helpers into wp-native-shell's
- * TokenStorageAdapter interface. Used by extrachill.config.ts.
+ * wp-native-shell 0.1.0 TokenStorageAdapter.
+ *
+ * Simple key-value interface backed by expo-secure-store.
+ * The shell's AuthFetchTransport manages its own key scheme
+ * (e.g. "wp-native:access_token") and calls getItem/setItem/removeItem.
  */
 export const secureStoreAdapter: TokenStorageAdapter = {
-    load: async (): Promise<ShellStoredTokens | null> => {
-        const tokens = await getTokens();
-        if (
-            !tokens.accessToken ||
-            !tokens.refreshToken ||
-            tokens.accessExpiresAt === null
-        ) {
-            return null;
-        }
-        return {
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            accessExpiresAt: tokens.accessExpiresAt,
-        };
-    },
-    save: async (tokens: ShellStoredTokens): Promise<void> => {
-        await storeTokens(
-            tokens.accessToken,
-            tokens.refreshToken,
-            tokens.accessExpiresAt,
-        );
-    },
-    clear: clearTokens,
-    getDeviceId,
+    getItem: (key: string) => SecureStore.getItemAsync(key),
+    setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
+    removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
