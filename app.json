@@ -2,7 +2,7 @@
   "expo": {
     "name": "Extra Chill",
     "slug": "extrachill-app",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "scheme": "extrachill",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
