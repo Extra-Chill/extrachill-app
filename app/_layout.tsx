@@ -13,21 +13,23 @@
 import { Slot } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { WPNativeApp } from 'wp-native-shell';
-import { config } from '../extrachill.config';
+import { config, fallbackConfig } from '../extrachill.config';
+import { getFontLoadState, registeredFonts } from '../src/theme/fonts';
 import LoginScreen from './login';
 
 export default function RootLayout() {
-    const [fontsLoaded] = useFonts({
-        'Helvetica': require('../assets/fonts/helvetica.ttf'),
-        'LoftSans': require('../assets/fonts/WilcoLoftSans-Treble.ttf'),
-    });
+    const [fontsLoaded, fontError] = useFonts(registeredFonts);
+    const fontLoadState = getFontLoadState(fontsLoaded, fontError);
 
-    if (!fontsLoaded) {
+    if (fontLoadState === 'loading') {
         return null;
     }
 
     return (
-        <WPNativeApp config={config} loginScreen={LoginScreen}>
+        <WPNativeApp
+            config={fontLoadState === 'ready' ? config : fallbackConfig}
+            loginScreen={LoginScreen}
+        >
             <Slot />
         </WPNativeApp>
     );
