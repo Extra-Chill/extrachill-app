@@ -1,9 +1,4 @@
-export type FontLoadState = 'loading' | 'ready' | 'fallback';
-
-export function assertFontFamiliesRegistered(
-    registeredFonts: Record<string, unknown>,
-    configuredFamilies: Record<string, string>,
-): void {
+function assertFontFamiliesRegistered(registeredFonts, configuredFamilies) {
     for (const [weight, fontFamily] of Object.entries(configuredFamilies)) {
         if (!(fontFamily in registeredFonts)) {
             throw new Error(`Configured ${weight} font family "${fontFamily}" is not registered.`);
@@ -11,10 +6,12 @@ export function assertFontFamiliesRegistered(
     }
 }
 
-export function getFontLoadState(loaded: boolean, error: Error | null): FontLoadState {
+function getFontLoadState(loaded, error) {
     if (error) {
         return 'fallback';
     }
 
     return loaded ? 'ready' : 'loading';
 }
+
+module.exports = { assertFontFamiliesRegistered, getFontLoadState };

@@ -1,6 +1,6 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
-import { assertFontFamiliesRegistered, getFontLoadState } from './font-contract';
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const { assertFontFamiliesRegistered, getFontLoadState } = require('./font-contract');
 
 test('configured font families resolve to registered font names', () => {
     assert.doesNotThrow(() => {
