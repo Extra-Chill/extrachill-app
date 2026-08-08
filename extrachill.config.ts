@@ -11,8 +11,9 @@
 
 import type { WPNativeConfig, AuthState } from 'wp-native-shell';
 import { secureStoreAdapter } from './src/auth/storage';
+import { themeFontFamilies } from './src/theme/fonts';
 
-export const config: WPNativeConfig = {
+const baseConfig: Omit<WPNativeConfig, 'theme'> = {
   api: {
     baseUrl: 'https://extrachill.com/wp-json',
     clientId: 'extrachill-app',
@@ -41,17 +42,20 @@ export const config: WPNativeConfig = {
     handoffAbility: 'wp-native/auth-browser-handoff',
   },
 
-  // Theme overrides — only override what we need; wp-native-shell's
-  // deepMergeTokens fills in defaults for everything else.
-  // TODO(M7.2): pull color tokens from @extrachill/tokens when the
-  // migration lands. For now, leave default colors from wp-native-shell.
+};
+
+export const config: WPNativeConfig = {
+  ...baseConfig,
   theme: {
     typography: {
-      fontFamily: 'WilcoLoftSans',
-      fontFamilyBold: 'WilcoLoftSans-Bold',
+      fontFamily: themeFontFamilies.regular,
       fontSizeBase: 16,
       fontSizes: { xs: 12, sm: 14, base: 16, lg: 18, xl: 20, '2xl': 24 },
       lineHeights: { tight: 1.2, normal: 1.5, relaxed: 1.75 },
     },
   },
 };
+
+// If runtime font loading fails, preserve a readable app using shell defaults
+// rather than configuring a family that React Native cannot resolve.
+export const fallbackConfig: WPNativeConfig = baseConfig;
