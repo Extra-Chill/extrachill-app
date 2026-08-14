@@ -2,20 +2,23 @@
 
 ## Product Definition
 
-The Extra Chill app is Roadie in your pocket: a conversational operating interface for everything a person is authorized to do across the Extra Chill network.
+The Extra Chill app is the Online Music Scene in your pocket: the people, music, events, conversations, and tools of the Extra Chill network delivered consistently across native platforms.
 
-Roadie is the default app surface, not a secondary assistant attached to a collection of conventional native screens. The app should let people ask for work in plain language, inspect the result, approve consequential actions, and move into a structured native or web surface when that is the better interface.
+Extra Chill is the product and the human scene is its heart. `wp-native` is the cross-platform application substrate. Roadie is the universal conversational interface. Capability-driven workspaces let artists, venues, contributors, and team members operate the parts of the scene they own.
 
 The product promise is:
 
-> Ask Extra Chill to help, review what it did, and keep the work moving from anywhere.
+> Discover the scene, participate in it, and keep your part of it moving from anywhere.
 
 ## Product Principles
 
-- **Roadie first:** open into the active Roadie conversation.
+- **Scene first:** people, music, events, and conversations remain the reason to open the app.
+- **Consistent behavior:** native screens, Roadie tools, and web interfaces call the same domain-owned abilities.
+- **Roadie everywhere:** Roadie can guide or operate any supported surface with the current workspace and object as context.
+- **Workspaces by capability:** artist, venue, editorial, community, and team tools appear only when the server reports the required access.
 - **Server-owned capability:** the app does not duplicate Roadie's tools, role policy, prompts, or domain authorization.
 - **Abilities over bespoke routes:** consume canonical WordPress and Agents API abilities rather than creating an app-specific backend.
-- **Structured when useful:** chat handles the long tail; repeated or information-dense work can earn a native surface.
+- **Right interface for the task:** use conversation for intent and multi-step work; use structured native surfaces for scanning, comparison, exact editing, calendars, pipelines, and previews.
 - **Human approval:** consequential actions remain visible and reviewable through pending-action contracts.
 - **One platform identity:** sessions and permissions follow the authenticated Extra Chill user across the multisite network.
 - **No thin web wrapper:** browser handoff is a supported escape hatch, not the primary application architecture.
@@ -23,7 +26,7 @@ The product promise is:
 
 ## Initial Audience
 
-The first release is a team-only native beta. This matches Roadie's current production entitlement and provides a bounded group that can exercise high-value workflows daily.
+The product is for the full Extra Chill scene. Delivery begins with a team-only native beta because Roadie's current production entitlement provides a bounded group that can exercise high-value workflows daily and prove the shared contracts before public distribution.
 
 Expansion follows proven authorization boundaries:
 
@@ -34,11 +37,31 @@ Expansion follows proven authorization boundaries:
 
 The app must not widen access merely to make a tool visible. Domain abilities remain authoritative for resource ownership and mutation permission.
 
-## Primary Navigation
+## Primary Surfaces
+
+### Scene
+
+The human and music-centered home. It is composed from explicit, calm sections rather than an engagement-ranked infinite feed.
+
+- Tonight and this weekend in the user's Local Scene.
+- New community conversations and direct participation opportunities.
+- Recent independent music coverage.
+- Artists and venues participating in the platform.
+- Upcoming shows and relevant personal activity.
+- Work requiring the user's attention when they have operating capabilities.
+
+### Calendar
+
+Live music discovery and the user's concert relationship with the scene.
+
+- Local Scene calendar and event detail.
+- Going, Check In, and I Was There.
+- My Shows and relevant event notifications.
+- Artist, venue, and community context around an event.
 
 ### Roadie
 
-The default screen and primary command surface.
+The persistent conversational interface, available globally and full-screen when needed.
 
 - Active conversation.
 - Conversation history and new-session controls.
@@ -46,15 +69,7 @@ The default screen and primary command surface.
 - Suggested starting actions based on server-reported capabilities.
 - Attachments from camera, photo library, files, and voice notes.
 - Native rendering for questions, citations, tool results, progress, artifacts, and errors.
-
-### Work
-
-A durable view of work that outlives one chat turn.
-
-- Active and recently completed runs.
-- Drafts, booking work, proposed changes, and other returned artifacts.
-- Retry, cancel, resume, or open actions when supported by canonical contracts.
-- Links into the relevant native surface or authenticated browser handoff.
+- Current Scene, event, artist, venue, discussion, booking, or draft context supplied by the app.
 
 ### Inbox
 
@@ -63,7 +78,7 @@ Things that need the user's attention.
 - Pending approvals.
 - Questions Roadie is waiting on.
 - Completed background work.
-- Relevant platform notifications.
+- Community replies, booking activity, and relevant platform notifications.
 - Deep links back to the owning conversation and object.
 
 ### You
@@ -71,10 +86,20 @@ Things that need the user's attention.
 Identity and app-level controls.
 
 - Current account and entitlement summary.
-- Managed artists and venues.
+- Managed artists, venues, drafts, and other capability-driven workspaces.
 - Notification preferences.
 - Session and security controls.
 - Privacy, support, and account-management links.
+
+### Workspaces
+
+Workspaces are reached from `You`, relevant Scene objects, Inbox items, and Roadie results. They are not a separate admin universe.
+
+- **Artist:** profile, links, assets, preview, submissions, and analytics.
+- **Venue:** booking inbox, inquiry detail, correspondence, calendar, files, and status.
+- **Editorial:** drafts, assignments, review, and Intelligence.
+- **Community:** profile, discussions, notifications, and Local Scene participation.
+- **Team:** issues, diagnostics, code proposals, approvals, and platform operations.
 
 ## Existing Foundation
 
@@ -101,13 +126,20 @@ The production platform already provides:
 ## Architecture
 
 ```text
-React Native app
-  -> wp-native bearer transport
-  -> canonical Agents API REST / ability contracts
-  -> Roadie agent and mode
-  -> Roadie tools
-  -> domain-owned Extra Chill abilities
+Structured native surface ─┐
+Roadie tool ────────────────┼─> domain-owned WordPress ability
+Web interface ──────────────┘
+
+React Native application
+  -> wp-native auth, discovery, transport, and shell behavior
+  -> WordPress Abilities API and canonical Agents API contracts
 ```
+
+### Cross-Platform Behavior
+
+`wp-native` establishes the common client behavior for iOS and Android and a reusable contract for other JavaScript consumers. WordPress abilities establish the authoritative product behavior across every interface.
+
+For any operation, structured native UI and Roadie must converge on the same ability. Ownership, validation, sanitization, side effects, errors, and returned data must not vary by interface. Platform-native presentation may vary because a booking pipeline, artist preview, event calendar, and conversation each need different interaction models.
 
 ### Client Boundary
 
@@ -130,6 +162,8 @@ The native app does not own:
 ### Roadie Boundary
 
 Roadie remains the Extra Chill policy and integration layer. It selects tools, composes Extra Chill context, resolves caller scope, and bridges to domain-owned abilities.
+
+Roadie helps people discover and participate in the scene; it does not replace the people or content with synthetic activity. Every structured surface should be able to provide its current workspace and object to Roadie, while every Roadie result should be able to return the user to the appropriate structured surface.
 
 Roadie's current browser integration composes important mode, workspace, page-context, and pending-action inputs through `frontend_agent_chat_*` filters. Before the native app depends on chat, that composition must be available through a client-neutral canonical boundary. Do not copy the browser adapter into the app and do not add a Roadie-specific transport to a generic layer.
 
@@ -163,9 +197,10 @@ Prove one authenticated team member can use a development build to:
 
 This milestone decides the client boundary before substantial UI work begins.
 
-### M1: Roadie Native Beta
+### M1: Native Platform Beta
 
-- Roadie-first home screen.
+- Scene shell with explicit, non-ranked sections backed by existing abilities.
+- Persistent Roadie entry point and full-screen conversation.
 - Session list, resume, rename, and delete.
 - Message composer and canonical message rendering.
 - Question, citation, tool-result, progress, artifact, and error states.
@@ -174,18 +209,20 @@ This milestone decides the client boundary before substantial UI work begins.
 - Browser handoff for unsupported destinations.
 - Crash reporting and privacy-safe beta instrumentation.
 
-### M2: Work and Inbox
+### M2: Scene, Calendar, and Inbox
 
-- Active and completed work view.
+- Local Scene, Calendar, event detail, and My Shows composition.
+- Community and editorial sections sourced from domain abilities.
 - Pending approvals and unanswered questions.
 - Background run completion handling.
 - Push registration and bounded notification delivery.
 - Deep links to conversations, approvals, and supported platform objects.
 
-### M3: Scoped Operators
+### M3: Capability-Driven Workspaces
 
 - Venue Roadie selection and booking workflows.
-- Artist-owner and contributor access after the server entitlement model supports them.
+- Artist, venue, editorial, community, and team structured surfaces where repeated workflows justify them.
+- Artist-owner and contributor access after server entitlement support is proven.
 - Contextual suggestions based on accessible capabilities, never client-inferred roles.
 
 ### M4: Public Distribution
@@ -198,6 +235,7 @@ This milestone decides the client boundary before substantial UI work begins.
 ## Beta Acceptance Criteria
 
 - A team member can complete a useful Roadie workflow from a physical iOS or Android device.
+- Structured UI and Roadie produce the same authorized behavior for the same domain operation.
 - The same Roadie conversation is visible across the app and existing web surface.
 - Every tool call is authorized as the authenticated user by the server.
 - Pending actions require explicit approval and preserve their canonical origin.
@@ -209,7 +247,6 @@ This milestone decides the client boundary before substantial UI work begins.
 ## Explicitly Deferred
 
 - Rebuilding every Extra Chill site as native screens.
-- An Events-first application structure.
 - A generalized activity feed.
 - Native Gutenberg before the Roadie writing workflow proves the required editor boundary.
 - Native commerce.
@@ -218,10 +255,11 @@ This milestone decides the client boundary before substantial UI work begins.
 
 ## Success Measures
 
-The team beta should answer whether Roadie makes platform work easier from a phone:
+The beta should answer whether the app strengthens participation in the scene and makes platform work easier from a phone:
 
 - Weekly active team users.
 - Useful workflows completed by tool family.
+- Scene, event, community, and editorial participation.
 - Time from request to approved completion.
 - Conversation and work-item return rate.
 - Pending-action completion and abandonment.

@@ -1,8 +1,10 @@
 # Extra Chill App
 
-React Native application for operating the Extra Chill platform through Roadie.
+React Native application for the Extra Chill Online Music Scene.
 
-Roadie is the default interface. The app authenticates an Extra Chill user, connects to canonical WordPress and Agents API contracts, and presents conversations, tool results, work progress, and approvals natively. Domain capabilities and authorization remain server-owned.
+Extra Chill is the product and its human scene is the heart. `wp-native` provides consistent cross-platform authentication, discovery, transport, and shell behavior. Roadie is the universal conversational interface across Scene, Calendar, community, and capability-driven artist, venue, editorial, and team workspaces.
+
+Structured native surfaces, Roadie tools, and web interfaces converge on the same domain-owned WordPress abilities so authorization and behavior remain consistent everywhere.
 
 See [plan.md](plan.md) for the product charter, architecture, milestones, and beta acceptance criteria.
 
@@ -16,7 +18,7 @@ The repository contains the authenticated Expo application foundation:
 - Authenticated browser handoff for Extra Chill network URLs.
 - Expo Router, Extra Chill design tokens, and native fonts.
 
-The current post-login screen is a placeholder. Native Roadie chat, sessions, run progress, structured tool results, pending-action resolution, Work, and Inbox are planned next.
+The current post-login screen is a placeholder. Native Scene, Calendar, Roadie, Inbox, and capability-driven workspace surfaces are planned next.
 
 ## Commands
 
@@ -29,11 +31,13 @@ The current post-login screen is a placeholder. Native Roadie chat, sessions, ru
 ## Architecture
 
 ```text
-React Native app
-  -> wp-native bearer transport
-  -> canonical Agents API REST / ability contracts
-  -> Roadie
-  -> domain-owned Extra Chill abilities
+Structured native surface ─┐
+Roadie tool ────────────────┼─> domain-owned WordPress ability
+Web interface ──────────────┘
+
+React Native application
+  -> wp-native auth, discovery, transport, and shell behavior
+  -> WordPress Abilities API and canonical Agents API contracts
 ```
 
 The application should not hardcode Roadie's tool inventory, duplicate role policy, or introduce app-specific backend substitutes for existing abilities.
