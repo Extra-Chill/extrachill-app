@@ -1,61 +1,58 @@
-# Extra Chill Mobile App
+# Extra Chill App
 
-React Native mobile application for the Extra Chill music community platform with Expo Router navigation and token-based authentication.
+React Native application for operating the Extra Chill platform through Roadie.
+
+Roadie is the default interface. The app authenticates an Extra Chill user, connects to canonical WordPress and Agents API contracts, and presents conversations, tool results, work progress, and approvals natively. Domain capabilities and authorization remain server-owned.
+
+See [plan.md](plan.md) for the product charter, architecture, milestones, and beta acceptance criteria.
+
+## Current Status
+
+The repository contains the authenticated Expo application foundation:
+
+- Login, registration, Google authentication, and onboarding.
+- Secure bearer-token storage and automatic refresh through `wp-native`.
+- WordPress Abilities API discovery and execution.
+- Authenticated browser handoff for Extra Chill network URLs.
+- Expo Router, Extra Chill design tokens, and native fonts.
+
+The current post-login screen is a placeholder. Native Roadie chat, sessions, run progress, structured tool results, pending-action resolution, Work, and Inbox are planned next.
 
 ## Commands
 
-- Dev server: `npm start`
-- Run: `npm run ios` / `npm run android` / `npm run web`
-- Type check: `npx tsc -p tsconfig.json --noEmit`
+- Start development server: `npm start`
+- Run iOS: `npm run ios`
+- Run Android: `npm run android`
+- Run web development target: `npm run web`
+- Type check: `npm run typecheck`
+
+## Architecture
+
+```text
+React Native app
+  -> wp-native bearer transport
+  -> canonical Agents API REST / ability contracts
+  -> Roadie
+  -> domain-owned Extra Chill abilities
+```
+
+The application should not hardcode Roadie's tool inventory, duplicate role policy, or introduce app-specific backend substitutes for existing abilities.
 
 ## Project Structure
 
-```
-extrachill-app/
-├── app/                       # Expo Router routes
-│   ├── _layout.tsx
-│   ├── index.tsx
-│   ├── login.tsx
-│   ├── onboarding.tsx
-│   └── (drawer)/
-│       ├── _layout.tsx
-│       └── feed.tsx
-├── src/
-│   ├── api/client.ts          # API client + token refresh
-│   ├── auth/                  # Auth context + SecureStore
-│   ├── components/            # UI components (DrawerContent, Avatar, etc.)
-│   ├── theme/                 # Theme tokens + context
-│   ├── utils/
-│   └── types/api.ts           # API response types
-├── assets/
-└── docs/CHANGELOG.md
+```text
+app/                       Expo Router routes
+src/auth/                  Extra Chill auth and storage integration
+src/components/            Native UI components
+src/types/                 Consumer-owned API types
+assets/                    App icons, images, and fonts
+extrachill.config.ts        wp-native-shell consumer configuration
+plan.md                    Product charter and delivery milestones
 ```
 
-## API Integration
+## Production API
 
-The app calls the Extra Chill REST API at `https://extrachill.com/wp-json/extrachill/v1` (see `src/api/client.ts`).
-
-### Auth endpoints used
-
-- `POST /auth/login` (requires `device_id`)
-- `POST /auth/register` (requires `device_id`; includes `registration_source`/`registration_method`)
-- `POST /auth/refresh` (requires `device_id`)
-- `POST /auth/logout` (requires `device_id`)
-- `GET /auth/me`
-- `POST /auth/google` (requires `device_id`)
-- `GET /config/oauth`
-- `GET`/`POST /users/onboarding`
-- `POST /auth/browser-handoff` (creates one-time web session handoff URLs)
-
-### Device tracking
-
-`device_id` is a UUID v4 persisted client-side and sent on auth/session endpoints.
-
-
-## Documentation
-
-- **[CLAUDE.md](CLAUDE.md)** - Development guidelines and API usage details
-- **[extrachill-api](../extrachill-plugins/extrachill-api/)** - REST API implementation (server-side)
+The app uses `https://extrachill.com/wp-json` as its production WordPress REST root. Authentication is provided by `wp-native-auth`; product and agent operations are exposed through discoverable abilities.
 
 ## License
 
