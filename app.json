@@ -32,7 +32,20 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "17.0"
+          },
+          "android": {
+            "extraMavenRepos": [
+              "https://a8c-libs.s3.amazonaws.com/android"
+            ]
+          }
+        }
+      ]
     ]
   }
 }

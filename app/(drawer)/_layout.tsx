@@ -20,7 +20,12 @@ export default function DrawerLayout() {
             <Drawer
                 drawerContent={(props) => <DrawerContent {...props} />}
                 screenOptions={{ headerShown: false, drawerType: 'front' }}
-            />
+            >
+                <Drawer.Screen
+                    name="gutenbergkit-diagnostic"
+                    options={{ drawerLabel: 'GutenbergKit', title: 'GutenbergKit' }}
+                />
+            </Drawer>
         </GestureHandlerRootView>
     );
 }
