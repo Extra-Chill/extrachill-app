@@ -15,7 +15,8 @@ import { themeFontFamilies } from './src/theme/fonts';
 
 const baseConfig: Omit<WPNativeConfig, 'theme'> = {
   api: {
-    baseUrl: 'https://extrachill.com/wp-json',
+    baseUrl: 'https://extrachill.com/wp-json/',
+    allowedBaseUrls: ['https://community.extrachill.com/wp-json/'],
     clientId: 'extrachill-app',
   },
 
@@ -29,6 +30,11 @@ const baseConfig: Omit<WPNativeConfig, 'theme'> = {
         id: 'feed',
         label: 'Scene',
         ability: 'wp/post.list',
+        visibleWhen: (auth: AuthState) => auth.isAuthenticated,
+      },
+      {
+        id: 'community',
+        label: 'Community',
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
       },
       {
