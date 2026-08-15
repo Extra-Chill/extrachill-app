@@ -27,12 +27,15 @@ const baseConfig: Omit<WPNativeConfig, 'theme'> = {
       // list/detail adapters land in follow-up issues.
       {
         id: 'feed',
-        label: 'Feed',
+        label: 'Scene',
         ability: 'wp/post.list',
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
       },
-      // More sections added in follow-up issues. Keep this list minimal
-      // for the first end-to-end dogfood.
+      {
+        id: 'roadie-diagnostic',
+        label: 'Roadie M0',
+        visibleWhen: (auth: AuthState) => auth.isAuthenticated,
+      },
     ],
   },
 
