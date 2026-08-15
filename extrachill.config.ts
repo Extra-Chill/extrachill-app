@@ -42,6 +42,11 @@ const baseConfig: Omit<WPNativeConfig, 'theme'> = {
         label: 'Roadie M0',
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
       },
+      {
+        id: 'gutenbergkit-diagnostic',
+        label: 'GutenbergKit',
+        visibleWhen: (auth: AuthState) => auth.isAuthenticated,
+      },
     ],
   },
 
