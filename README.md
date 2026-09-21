@@ -28,6 +28,10 @@ The current post-login screen is a placeholder. Native Scene, Calendar, Roadie, 
 - Run web development target: `npm run web`
 - Type check: `npm run typecheck`
 
+GutenbergKit native builds require iOS 17+ and an Xcode 26 toolchain capable of
+resolving Swift tools 6.2 packages. The editor is unavailable in Expo Go; use a
+custom development or production build.
+
 ## Architecture
 
 ```text
