@@ -1,5 +1,6 @@
 # Build directories (created by build.sh scripts)
 build/
+dist/
 
 # Node modules
 node_modules/

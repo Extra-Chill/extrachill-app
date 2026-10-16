@@ -26,6 +26,7 @@ The current post-login screen is a placeholder. Native Scene, Calendar, Roadie, 
 - Run iOS: `npm run ios`
 - Run Android: `npm run android`
 - Run web development target: `npm run web`
+- Export a static web build: `npx expo export --platform web` (output in `dist/`)
 - Type check: `npm run typecheck`
 
 ## Architecture
