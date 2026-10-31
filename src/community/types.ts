@@ -10,6 +10,7 @@ export interface PublicVoice {
 
 export interface Forum {
     forum_id: number;
+    accepts_topics?: boolean;
     title: string;
     parent_id: number;
     status: string;

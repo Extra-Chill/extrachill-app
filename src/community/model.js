@@ -76,6 +76,20 @@ export function forumRows(forums) {
     return rows;
 }
 
+// The current ability schema has no title/content length limits.
+export function validateNewTopic(forumId, title, content) {
+    const errors = {};
+    if (!Number.isInteger(forumId) || forumId < 1) errors.forum = 'Choose a room.';
+    if (!title.trim()) errors.title = 'Enter a topic title.';
+    if (!content.trim()) errors.content = 'Enter a topic body.';
+    return errors;
+}
+
+export function topicForums(forums) {
+    return forums.filter((forum) => forum.accepts_topics !== false
+        && !['closed', 'trash', 'spam', 'pending', 'draft', 'archived'].includes(forum.status));
+}
+
 export function mergeReplies(current, incoming) {
     const replies = new Map(current.map((reply) => [reply.reply_id, reply]));
     for (const reply of incoming) replies.set(reply.reply_id, reply);

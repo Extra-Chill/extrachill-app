@@ -5,6 +5,7 @@ import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import type { ParamListBase } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, useBrowserHandoff, useTheme } from 'wp-native-shell';
+import { Button } from '../../../src/components';
 import { COMMUNITY_REST_ROOT, listForums, recentActivity } from '../../../src/community/client';
 import { CommunityHeader, SectionHeading, StatePanel, communityStyles } from '../../../src/community/components';
 import { communityError, displayDate, forumRows } from '../../../src/community/model';
@@ -55,6 +56,7 @@ export default function CommunityHome() {
                     contentContainerStyle={communityStyles.scrollContent}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={theme.colors.primary} />}
                 >
+                    <Button onPress={() => router.push('/community/new-topic')}>New topic</Button>
                     <SectionHeading>What's happening</SectionHeading>
                     {activity.length === 0 ? (
                         <Text style={[communityStyles.body, { color: theme.colors.textMuted }]}>No public activity yet.</Text>
