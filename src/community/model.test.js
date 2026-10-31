@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { communityError, forumRows, mergeReplies, plainText, plainTextToHtml } from './model.js';
+import { communityError, forumRows, mergeReplies, plainText, plainTextToHtml, topicForums, validateNewTopic } from './model.js';
 
 test('plainText produces readable native copy from canonical HTML', () => {
     assert.equal(
@@ -11,6 +11,35 @@ test('plainText produces readable native copy from canonical HTML', () => {
 
 test('plainTextToHtml preserves literal composer text for server sanitization', () => {
     assert.equal(plainTextToHtml('Rock < roll\n"yeah"'), 'Rock &lt; roll<br>&quot;yeah&quot;');
+});
+
+test('new topic requires a positive forum ID, nonblank title and trimmed body', () => {
+    assert.deepEqual(Object.keys(validateNewTopic(0, '  \n', '\t ')), ['forum', 'title', 'content']);
+    for (const id of [-1, 1.5, NaN, Infinity]) {
+        assert.equal(validateNewTopic(id, 'Title', 'Body').forum, 'Choose a room.');
+    }
+    assert.deepEqual(validateNewTopic(1, ' Title ', ' \nBody\n '), {});
+    // No maxLength is declared by the ability schema: do not invent a limit.
+    assert.deepEqual(validateNewTopic(1, 'a'.repeat(1000), 'b'.repeat(10000)), {});
+});
+
+test('topicForums excludes server-marked unavailable destinations without reordering', () => {
+    const forums = [
+        { forum_id: 1, status: 'open' },
+        { forum_id: 2, status: 'closed' },
+        { forum_id: 3, status: 'publish', accepts_topics: false },
+        { forum_id: 4, status: 'publish' },
+        { forum_id: 5, status: 'trash' },
+        { forum_id: 6, status: 'archived' },
+    ];
+    assert.deepEqual(topicForums(forums).map((forum) => forum.forum_id), [1, 4]);
+    assert.equal(forums.length, 6);
+    assert.deepEqual(topicForums([]), []);
+});
+
+test('topic text is escaped rather than interpreted as HTML', () => {
+    assert.equal(plainTextToHtml('<script>alert(\'x\')</script> & \"hi\"\r\nNext'),
+        '&lt;script&gt;alert(&#039;x&#039;)&lt;/script&gt; &amp; &quot;hi&quot;<br>Next');
 });
 
 test('forumRows preserves server order while nesting children', () => {

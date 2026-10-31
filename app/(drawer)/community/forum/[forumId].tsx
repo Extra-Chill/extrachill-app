@@ -3,6 +3,7 @@ import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, useBrowserHandoff, useTheme } from 'wp-native-shell';
+import { Button } from '../../../../src/components';
 import { COMMUNITY_REST_ROOT, listTopics } from '../../../../src/community/client';
 import { CanonicalButton, CommunityHeader, IdentityLine, StatePanel, communityStyles } from '../../../../src/community/components';
 import { communityError } from '../../../../src/community/model';
@@ -67,6 +68,7 @@ export default function ForumTopics() {
                     keyExtractor={(topic) => String(topic.topic_id)}
                     contentContainerStyle={communityStyles.scrollContent}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(1, true)} tintColor={theme.colors.primary} />}
+                    ListHeaderComponent={<Button onPress={() => router.push({ pathname: '/community/new-topic', params: { forumId: String(forumId) } })}>New topic</Button>}
                     ListEmptyComponent={<StatePanel message="No discussions have been started in this room." />}
                     ListFooterComponent={page < pages ? (
                         <Pressable

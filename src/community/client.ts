@@ -5,8 +5,8 @@ import type { ActivityItem, Forum, PublicVoice, Reply, Topic } from './types';
 export const COMMUNITY_REST_ROOT = 'https://community.extrachill.com/wp-json/';
 export const PAGE_SIZE = 20;
 
-export function listForums(client: WPNativeClient): Promise<{ forums: Forum[] }> {
-    return client.execute('extrachill/community-list-forums', { archive_only: true });
+export function listForums(client: WPNativeClient, archiveOnly = true): Promise<{ forums: Forum[] }> {
+    return client.execute('extrachill/community-list-forums', { archive_only: archiveOnly });
 }
 
 export function listTopics(client: WPNativeClient, forumId: number, page = 1) {
@@ -35,6 +35,22 @@ export function recentActivity(client: WPNativeClient) {
         'extrachill/community-recent-public-activity',
         { limit: 5 },
     );
+}
+
+export function createTopic(client: WPNativeClient, forumId: number, title: string, content: string) {
+    return client.execute<{
+        topic_id: number;
+        title: string;
+        url: string;
+        forum_id: number;
+        author_id: number;
+        public_voice?: PublicVoice | null;
+    }>('extrachill/community-create-topic', {
+        forum_id: forumId,
+        title: title.trim(),
+        content: plainTextToHtml(content.trim()),
+        format: 'html',
+    });
 }
 
 export function createReply(client: WPNativeClient, topicId: number, content: string) {
