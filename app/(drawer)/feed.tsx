@@ -6,11 +6,12 @@
  * activity feed.
  */
 
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import type { ParamListBase } from '@react-navigation/native';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
+import { InboxBadge } from '../../src/inbox/Badge';
 import { useAuth, useTheme } from 'wp-native-shell';
 import { Avatar } from '../../src/components';
 
@@ -18,6 +19,7 @@ export default function Feed() {
     const navigation = useNavigation<DrawerNavigationProp<ParamListBase>>();
     const { user } = useAuth();
     const theme = useTheme();
+    const router = useRouter();
 
     const openDrawer = () => {
         navigation.openDrawer();
@@ -47,7 +49,10 @@ export default function Feed() {
                     />
                 </View>
 
-                <View style={styles.headerRight} />
+                <Pressable accessibilityRole="button" accessibilityLabel="Open Inbox" onPress={() => router.push('/inbox')} style={styles.headerRight}>
+                    <Text style={{ color: theme.colors.text }}>Inbox</Text>
+                    <InboxBadge />
+                </Pressable>
             </View>
 
             <View style={[styles.content, { padding: theme.spacing.xl }]}>
