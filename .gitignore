@@ -40,6 +40,7 @@ access_log
 
 # Cache directories
 .cache/
+.expo/
 
 # Environment files
 .env

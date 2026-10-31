@@ -2,6 +2,12 @@
   "expo": {
     "name": "Extra Chill",
     "slug": "extrachill-app",
+    "owner": "replace-with-expo-owner",
+    "extra": {
+      "eas": {
+        "projectId": "00000000-0000-0000-0000-000000000000"
+      }
+    },
     "version": "0.5.0",
     "scheme": "extrachill",
     "orientation": "portrait",
@@ -11,12 +17,18 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "dark": {
+        "backgroundColor": "#1a1a1a"
+      }
     },
     "ios": {
       "supportsTablet": true,
       "usesAppleSignIn": true,
-      "bundleIdentifier": "com.extrachill.app"
+      "bundleIdentifier": "com.extrachill.app",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.extrachill.app",
@@ -33,9 +45,21 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store",
+      ["expo-secure-store", { "faceIDPermission": false }],
       "expo-apple-authentication",
-      "@react-native-google-signin/google-signin"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#1a1a1a"
+          }
+        }
+      ]
     ]
   }
 }
