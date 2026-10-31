@@ -24,12 +24,9 @@ const baseConfig: Omit<WPNativeConfig, 'theme'> = {
 
   navigation: {
     sections: [
-      // Initial sections render as placeholders (M5.3 fallback) until
-      // list/detail adapters land in follow-up issues.
       {
         id: 'feed',
         label: 'Scene',
-        ability: 'wp/post.list',
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
       },
       {
