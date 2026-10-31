@@ -53,6 +53,11 @@ const baseConfig: Omit<WPNativeConfig, 'theme'> = {
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
       },
       {
+        id: 'search',
+        label: 'Search',
+        visibleWhen: (auth: AuthState) => auth.isAuthenticated,
+      },
+      {
         id: 'roadie-diagnostic',
         label: 'Roadie M0',
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
