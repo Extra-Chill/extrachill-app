@@ -57,6 +57,7 @@ export default function CommunityHome() {
                     contentContainerStyle={communityStyles.scrollContent}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={theme.colors.primary} />}
                 >
+                    <Button onPress={() => router.push('/members')}>People in your scene</Button>
                     <Button onPress={() => router.push('/community/new-topic')}>New topic</Button>
                     <SectionHeading>What's happening</SectionHeading>
                     {activity.length === 0 ? (
@@ -70,7 +71,7 @@ export default function CommunityHome() {
                         >
                             <Text style={[communityStyles.cardTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamilyBold ?? theme.typography.fontFamily }]}>{item.title}</Text>
                             <Text style={[communityStyles.meta, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>
-                                {item.actor.display_name} {item.activity_type === 'reply' ? 'replied' : 'started a discussion'} in {item.relationships.forum.name}
+                                <Text accessibilityRole="link" onPress={(event) => { event.stopPropagation(); if (item.actor.profile_url) void handle(item.actor.profile_url); }} style={{ color: theme.colors.primary }}>{item.actor.display_name}</Text> {item.activity_type === 'reply' ? 'replied' : 'started a discussion'} in {item.relationships.forum.name}
                             </Text>
                             <Text style={[communityStyles.meta, { color: theme.colors.textMuted }]}>{displayDate(item.timestamp)}</Text>
                         </Pressable>

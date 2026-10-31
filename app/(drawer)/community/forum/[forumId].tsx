@@ -91,7 +91,7 @@ export default function ForumTopics() {
                                 <Text style={[communityStyles.cardTitle, communityStyles.grow, { color: theme.colors.text }]}>{item.title}</Text>
                                 {item.status === 'closed' ? <Text style={[communityStyles.meta, { color: theme.colors.error }]}>Closed</Text> : null}
                             </View>
-                            <IdentityLine authorName={item.author_name} date={item.date} voice={item.public_voice} />
+                            <IdentityLine authorId={item.author_id} authorName={item.author_name} date={item.date} voice={item.public_voice} />
                             <ModerationActions client={communityClient} postId={item.topic_id} authorId={item.author_id} authorName={item.author_name} onBlocked={async () => { setTopics([]); await load(); }} />
                             <Text style={[communityStyles.meta, { color: theme.colors.textMuted }]}>{item.reply_count} replies · {item.voice_count} participants</Text>
                         </Pressable>

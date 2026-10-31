@@ -6,6 +6,9 @@ export interface Notification {
     link: string;
     is_read: boolean | number | string;
     created_at: string;
+    actor_id?: number;
+    actor_display_name?: string;
+    actor_profile_link?: string;
 }
 export interface NotificationPage {
     notifications: Notification[];
