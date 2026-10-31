@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, useBrowserHandoff, useTheme } from 'wp-native-shell';
 import { Button } from '../../../../src/components';
 import { COMMUNITY_REST_ROOT, listTopics } from '../../../../src/community/client';
 import { CanonicalButton, CommunityHeader, IdentityLine, StatePanel, communityStyles } from '../../../../src/community/components';
 import { communityError } from '../../../../src/community/model';
+import { ModerationActions } from '../../../../src/community/ModerationActions';
 import type { Topic } from '../../../../src/community/types';
 
 export default function ForumTopics() {
@@ -47,9 +48,9 @@ export default function ForumTopics() {
         }
     };
 
-    useEffect(() => {
+    useFocusEffect(useCallback(() => {
         void load();
-    }, [communityClient, forumId]);
+    }, [communityClient, forumId]));
 
     return (
         <SafeAreaView style={[communityStyles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'bottom']}>
@@ -91,6 +92,7 @@ export default function ForumTopics() {
                                 {item.status === 'closed' ? <Text style={[communityStyles.meta, { color: theme.colors.error }]}>Closed</Text> : null}
                             </View>
                             <IdentityLine authorName={item.author_name} date={item.date} voice={item.public_voice} />
+                            <ModerationActions client={communityClient} postId={item.topic_id} authorId={item.author_id} authorName={item.author_name} onBlocked={async () => { setTopics([]); await load(); }} />
                             <Text style={[communityStyles.meta, { color: theme.colors.textMuted }]}>{item.reply_count} replies · {item.voice_count} participants</Text>
                         </Pressable>
                     )}

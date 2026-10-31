@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -10,7 +10,7 @@ import {
     TextInput,
     View,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, useBrowserHandoff, useTheme } from 'wp-native-shell';
 import {
@@ -22,6 +22,7 @@ import {
 } from '../../../../src/community/client';
 import { CanonicalButton, CommunityHeader, IdentityLine, StatePanel, communityStyles } from '../../../../src/community/components';
 import { communityError, mergeReplies, plainText } from '../../../../src/community/model';
+import { ModerationActions } from '../../../../src/community/ModerationActions';
 import type { Reply, Topic } from '../../../../src/community/types';
 
 export default function TopicDetail() {
@@ -66,9 +67,9 @@ export default function TopicDetail() {
         }
     };
 
-    useEffect(() => {
+    useFocusEffect(useCallback(() => {
         void load();
-    }, [communityClient, topicId]);
+    }, [communityClient, topicId]));
 
     const loadMore = async () => {
         if (loadingMore || replyPage >= replyPages) return;
@@ -153,6 +154,7 @@ export default function TopicDetail() {
                                 {topic.status === 'closed' ? <Text style={{ color: theme.colors.error }}>Closed</Text> : null}
                             </View>
                             <IdentityLine authorName={topic.author_name} date={topic.date} voice={topic.public_voice} />
+                            <ModerationActions client={communityClient} postId={topic.topic_id} authorId={topic.author_id} authorName={topic.author_name} onBlocked={async () => { setTopic(null); setReplies([]); await load(); }} />
                             <Text selectable style={[communityStyles.body, { color: theme.colors.text, fontFamily: theme.typography.fontFamily }]}>{plainText(topic.content)}</Text>
                             <View style={communityStyles.rowBetween}>
                                 <Pressable onPress={() => void upvote(topic.topic_id, 'topic')} accessibilityRole="button" style={styles.upvote}>
@@ -166,6 +168,7 @@ export default function TopicDetail() {
                         {replies.map((reply) => (
                             <View key={reply.reply_id} style={[communityStyles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
                                 <IdentityLine authorName={reply.author_name} date={reply.date} voice={reply.public_voice} />
+                                <ModerationActions client={communityClient} postId={reply.reply_id} authorId={reply.author_id} authorName={reply.author_name} onBlocked={async () => { setReplies([]); await load(); }} />
                                 <Text selectable style={[communityStyles.body, { color: theme.colors.text, fontFamily: theme.typography.fontFamily }]}>{plainText(reply.content)}</Text>
                                 <View style={communityStyles.rowBetween}>
                                     <Pressable onPress={() => void upvote(reply.reply_id, 'reply')} accessibilityRole="button" style={styles.upvote}>
