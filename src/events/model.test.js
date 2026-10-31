@@ -1,8 +1,26 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { scopes, mergeDates, eventTime, validEventId, safeLink } = require('./model');
+const { scopes, mergeDates, eventTime, validEventId, safeLink, mergeEvent, eventError } = require('./model');
 const event = (id, datetime) => ({ id, datetime });
 
+test('detail merge supports cached-only, cold fetch, and authoritative refreshed fields', () => {
+    const cached = { id: 1, title: 'Old', ticket_url: 'https://tickets.example', venue: { name: 'Venue' } };
+    const fetched = { id: 1, title: 'New', ticket_url: '', venue: null, content_html: '<p>Description</p>' };
+    assert.equal(mergeEvent(cached, null), cached);
+    assert.equal(mergeEvent(undefined, fetched), fetched);
+    assert.equal(mergeEvent(undefined, undefined), null);
+    assert.deepEqual(mergeEvent(cached, fetched), fetched);
+    assert.equal(cached.title, 'Old');
+    assert.deepEqual(mergeEvent(cached, { id: 2, title: 'Other' }), { id: 2, title: 'Other' });
+});
+test('event errors distinguish unavailable events from retryable failures', () => {
+    for (const error of [{ status: 404 }, { code: 'event_not_found' }]) {
+        assert.deepEqual(eventError(error), { kind: 'not-found', message: "This event isn't available anymore." });
+    }
+    for (const error of [null, new Error('Network'), { status: 500 }, { status: 403 }]) {
+        assert.deepEqual(eventError(error), { kind: 'retry', message: 'This event could not be loaded. Try again.' });
+    }
+});
 test('scope chips use the calendar scope enum; upcoming omits a named scope', () => {
     assert.deepEqual(scopes.map(item => item.value), ['tonight', 'this-weekend', 'this-week', 'upcoming']);
 });

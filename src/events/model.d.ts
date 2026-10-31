@@ -6,6 +6,7 @@ export interface CalendarEvent {
     datetime: string;
     end_datetime: string | null;
     permalink: string;
+    content_html?: string;
     venue: { name: string; timezone: string | null; formatted_address?: string } | null;
     performer: { name: string } | null;
     ticket_url: string | null;
@@ -17,3 +18,5 @@ export function mergeDates(current: DateGroup[], incoming: DateGroup[]): DateGro
 export function eventTime(event: CalendarEvent): string;
 export function validEventId(value: unknown): boolean;
 export function safeLink(value: unknown): string | null;
+export function mergeEvent(cached: CalendarEvent | null | undefined, fetched: CalendarEvent | null | undefined): CalendarEvent | null;
+export function eventError(error: unknown): { kind: 'not-found' | 'retry'; message: string };
