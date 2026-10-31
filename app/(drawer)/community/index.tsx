@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { useNavigation, useRouter } from 'expo-router';
+import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import type { ParamListBase } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,12 +9,13 @@ import { Button } from '../../../src/components';
 import { COMMUNITY_REST_ROOT, listForums, recentActivity } from '../../../src/community/client';
 import { CommunityHeader, SectionHeading, StatePanel, communityStyles } from '../../../src/community/components';
 import { communityError, displayDate, forumRows } from '../../../src/community/model';
+import { moderationAvailable } from '../../../src/community/moderation-client';
 import type { ActivityItem, Forum } from '../../../src/community/types';
 
 export default function CommunityHome() {
     const navigation = useNavigation<DrawerNavigationProp<ParamListBase>>();
     const router = useRouter();
-    const { client } = useAuth();
+    const { client, user } = useAuth();
     const { handle } = useBrowserHandoff();
     const theme = useTheme();
     const communityClient = useMemo(() => client.derive(COMMUNITY_REST_ROOT), [client]);
@@ -42,13 +43,13 @@ export default function CommunityHome() {
         }
     };
 
-    useEffect(() => {
+    useFocusEffect(useCallback(() => {
         void load();
-    }, [communityClient]);
+    }, [communityClient]));
 
     return (
         <SafeAreaView style={[communityStyles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'bottom']}>
-            <CommunityHeader title="Community" subtitle="Recent conversations and rooms" onLeadingPress={() => navigation.openDrawer()} />
+            <CommunityHeader title="Community" subtitle="Recent conversations and rooms" onLeadingPress={() => navigation.openDrawer()} trailing={user && moderationAvailable(communityClient).list ? <Pressable accessibilityRole="button" onPress={() => router.push('/community/blocked')}><Text style={{ color: theme.colors.primary }}>Blocked members</Text></Pressable> : null} />
             {loading ? <StatePanel loading message="Loading Community..." /> : error ? (
                 <StatePanel message={error} actionLabel="Try again" onAction={() => void load()} />
             ) : (
