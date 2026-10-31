@@ -2,6 +2,7 @@ import { DrawerContentScrollView, type DrawerContentComponentProps } from '@reac
 import { Pressable, Text } from 'react-native';
 import { useAuth, useNavigationConfig, useTheme } from 'wp-native-shell';
 import { InboxBadge } from './Badge';
+import { canReadStories } from '../stories/client';
 
 // The shell drawer does not expose an item/badge slot; preserve its config-driven sections.
 export function InboxDrawerContent(props: DrawerContentComponentProps) {
@@ -9,7 +10,7 @@ export function InboxDrawerContent(props: DrawerContentComponentProps) {
     const auth = useAuth();
     const theme = useTheme();
     return <DrawerContentScrollView {...props} style={{ backgroundColor: theme.colors.surface }}>
-        {navigation.sections.filter(section => !section.visibleWhen || section.visibleWhen(auth)).map(section => (
+        {navigation.sections.filter(section => (section.id !== 'stories' || canReadStories(auth.client)) && (!section.visibleWhen || section.visibleWhen(auth))).map(section => (
             <Pressable key={section.id} accessibilityRole="button" onPress={() => props.navigation.navigate(section.id)} style={{ flexDirection: 'row', alignItems: 'center', padding: theme.spacing.lg }}>
                 <Text style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily, fontWeight: '600', fontSize: theme.typography.fontSizes.base }}>{section.label}</Text>
                 {section.id === 'inbox' ? <InboxBadge /> : null}

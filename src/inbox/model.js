@@ -5,6 +5,8 @@ export function notificationRoute(link) {
         if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.port) return null;
         const topic = url.hostname === 'community.extrachill.com' && url.pathname.match(/^\/(?:community\/)?topic\/([1-9]\d*)\/?$/);
         const event = url.hostname === 'events.extrachill.com' && url.pathname.match(/^\/(?:calendar\/)?event\/([1-9]\d*)\/?$/);
+        const story = url.hostname === 'extrachill.com' && url.pathname.match(/^\/stories\/([1-9]\d*)\/?$/);
+        if (story) return `/stories/${story[1]}`;
         if (topic) return `/community/topic/${topic[1]}`;
         if (event) return `/calendar/event/${event[1]}`;
         return null;

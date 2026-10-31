@@ -6,6 +6,12 @@ test('maps numeric community topics and events to native routes', () => {
     assert.equal(notificationRoute('https://community.extrachill.com/topic/42/#reply-5'), '/community/topic/42');
     assert.equal(notificationRoute('https://events.extrachill.com/event/17/?ref=inbox'), '/calendar/event/17');
 });
+test('maps contracted story URLs only on the main host', () => {
+    assert.equal(notificationRoute('https://extrachill.com/stories/86/?ref=inbox'), '/stories/86');
+    for (const url of ['https://extrachill.com/stories/0', 'https://extrachill.com/stories/a-slug', 'https://evil.test/stories/86', 'https://extrachill.com/stories/86/extra']) {
+        assert.equal(notificationRoute(url), null);
+    }
+});
 test('hands off other hosts, slug permalinks and non-resource paths', () => {
     for (const url of [
         'https://extrachill.com/news', 'https://community.extrachill.com/topic/a-slug/',
