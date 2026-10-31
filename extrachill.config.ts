@@ -30,6 +30,11 @@ const baseConfig: Omit<WPNativeConfig, 'theme'> = {
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
       },
       {
+        id: 'stories',
+        label: 'Stories',
+        visibleWhen: (auth: AuthState) => auth.isAuthenticated,
+      },
+      {
         id: 'community',
         label: 'Community',
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
