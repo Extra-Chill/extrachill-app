@@ -40,6 +40,11 @@ const baseConfig: Omit<WPNativeConfig, 'theme'> = {
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
       },
       {
+        id: 'members',
+        label: 'People in your scene',
+        visibleWhen: (auth: AuthState) => auth.isAuthenticated,
+      },
+      {
         id: 'calendar',
         label: 'Calendar',
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,

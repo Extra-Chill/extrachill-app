@@ -10,6 +10,7 @@ import { communityError, displayDate } from '../../../src/community/model';
 import { listNotifications, type Notification } from '../../../src/inbox/client';
 import { isUnread, mergeNotifications, notificationRoute } from '../../../src/inbox/model';
 import { useInbox } from '../../../src/inbox/context';
+import { MemberIdentity } from '../../../src/members/MemberIdentity';
 
 export default function Inbox() {
     const navigation = useNavigation<DrawerNavigationProp<ParamListBase>>();
@@ -111,6 +112,7 @@ export default function Inbox() {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { if (!busy) void load(1, true); }} tintColor={theme.colors.primary} />}
                 ListEmptyComponent={<Text style={[styles.body, { color: theme.colors.textMuted }]}>{unread ? 'You’re all caught up.' : 'No notifications yet.'}</Text>}
                 renderItem={({ item }) => <Pressable disabled={busy} accessibilityRole="link" accessibilityLabel={`${isUnread(item) ? 'Unread: ' : ''}${item.title}`} onPress={() => void read(item)} style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+                    {item.actor_id && item.actor_display_name ? <MemberIdentity id={item.actor_id} name={item.actor_display_name} /> : null}
                     <Text style={[styles.cardTitle, { color: theme.colors.text, fontWeight: isUnread(item) ? '700' : '400' }]}>{isUnread(item) ? '● ' : ''}{item.title}</Text>
                     <Text style={[styles.meta, { color: theme.colors.textMuted }]}>{displayDate(item.created_at)}</Text>
                 </Pressable>}

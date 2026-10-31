@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { useTheme } from 'wp-native-shell';
 import { displayDate } from './model';
 import type { PublicVoice } from './types';
+import { MemberIdentity } from '../members/MemberIdentity';
 
 interface HeaderProps {
     title: string;
@@ -81,10 +82,12 @@ export function StatePanel({
 
 export function IdentityLine({
     authorName,
+    authorId,
     date,
     voice,
 }: {
     authorName: string;
+    authorId?: number;
     date: string;
     voice?: PublicVoice | null;
 }) {
@@ -92,7 +95,7 @@ export function IdentityLine({
     const identity = voice?.name || authorName || 'Community member';
     return (
         <View style={styles.identityRow}>
-            <Text style={[styles.identity, { color: theme.colors.text, fontFamily: theme.typography.fontFamilyBold ?? theme.typography.fontFamily }]}>{identity}</Text>
+            <MemberIdentity id={authorId} name={identity} />
             {voice?.automated ? <Text style={[styles.badge, { color: theme.colors.textMuted, borderColor: theme.colors.border }]}>Automated</Text> : null}
             <Text style={[styles.date, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>{displayDate(date)}</Text>
         </View>

@@ -7,7 +7,7 @@ import { blockMember, moderationAvailable, reportContent, reportMessage, REPORT_
 import type { ReportReason } from './moderation-model';
 
 export function ModerationActions({ client, postId, authorId, authorName, onBlocked }: {
-    client: WPNativeClient; postId: number; authorId: number; authorName: string; onBlocked: () => Promise<void>;
+    client: WPNativeClient; postId?: number; authorId: number; authorName: string; onBlocked: () => Promise<void>;
 }) {
     const { user } = useAuth();
     const theme = useTheme();
@@ -24,7 +24,7 @@ export function ModerationActions({ client, postId, authorId, authorName, onBloc
         setBusy(true);
         setMessage('');
         try {
-            const result = await reportContent(client, { post_id: postId }, reason, note);
+            const result = await reportContent(client, postId === undefined ? { user_id: authorId } : { post_id: postId }, reason, note);
             setOpen(false);
             Alert.alert('Report received', reportMessage(result));
         } catch (error) {
@@ -47,9 +47,9 @@ export function ModerationActions({ client, postId, authorId, authorName, onBloc
         </Pressable>
     );
     return <>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Actions for post by ${authorName}`} disabled={busy} style={communityStyles.button} onPress={(event) => {
+        <Pressable accessibilityRole="button" accessibilityLabel={`Actions for ${authorName}`} disabled={busy} style={communityStyles.button} onPress={(event) => {
             event.stopPropagation();
-            Alert.alert('Post actions', undefined, [
+            Alert.alert(postId === undefined ? 'Member actions' : 'Post actions', undefined, [
                 ...(available.report ? [{ text: 'Report', onPress: () => { setReason('spam'); setNote(''); setMessage(''); setOpen(true); } }] : []),
                 ...(available.block ? [{ text: `Block ${authorName}`, onPress: block }] : []),
                 { text: 'Cancel', style: 'cancel' as const },

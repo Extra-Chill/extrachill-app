@@ -153,7 +153,7 @@ export default function TopicDetail() {
                                 <Text style={[styles.topicTitle, communityStyles.grow, { color: theme.colors.text }]}>{topic.title}</Text>
                                 {topic.status === 'closed' ? <Text style={{ color: theme.colors.error }}>Closed</Text> : null}
                             </View>
-                            <IdentityLine authorName={topic.author_name} date={topic.date} voice={topic.public_voice} />
+                            <IdentityLine authorId={topic.author_id} authorName={topic.author_name} date={topic.date} voice={topic.public_voice} />
                             <ModerationActions client={communityClient} postId={topic.topic_id} authorId={topic.author_id} authorName={topic.author_name} onBlocked={async () => { setTopic(null); setReplies([]); await load(); }} />
                             <Text selectable style={[communityStyles.body, { color: theme.colors.text, fontFamily: theme.typography.fontFamily }]}>{plainText(topic.content)}</Text>
                             <View style={communityStyles.rowBetween}>
@@ -167,7 +167,7 @@ export default function TopicDetail() {
                         {replies.length === 0 ? <Text style={[communityStyles.body, { color: theme.colors.textMuted }]}>No replies yet. Start the conversation.</Text> : null}
                         {replies.map((reply) => (
                             <View key={reply.reply_id} style={[communityStyles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-                                <IdentityLine authorName={reply.author_name} date={reply.date} voice={reply.public_voice} />
+                                <IdentityLine authorId={reply.author_id} authorName={reply.author_name} date={reply.date} voice={reply.public_voice} />
                                 <ModerationActions client={communityClient} postId={reply.reply_id} authorId={reply.author_id} authorName={reply.author_name} onBlocked={async () => { setReplies([]); await load(); }} />
                                 <Text selectable style={[communityStyles.body, { color: theme.colors.text, fontFamily: theme.typography.fontFamily }]}>{plainText(reply.content)}</Text>
                                 <View style={communityStyles.rowBetween}>
