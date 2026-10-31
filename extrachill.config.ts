@@ -16,7 +16,7 @@ import { themeFontFamilies } from './src/theme/fonts';
 const baseConfig: Omit<WPNativeConfig, 'theme'> = {
   api: {
     baseUrl: 'https://extrachill.com/wp-json/',
-    allowedBaseUrls: ['https://community.extrachill.com/wp-json/', 'https://events.extrachill.com/wp-json/'],
+    allowedBaseUrls: ['https://community.extrachill.com/wp-json/', 'https://events.extrachill.com/wp-json/', 'https://artist.extrachill.com/wp-json/'],
     clientId: 'extrachill-app',
   },
 
@@ -55,6 +55,7 @@ const baseConfig: Omit<WPNativeConfig, 'theme'> = {
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,
       },
       {
+        // Includes the membership-only My Artists surface at /you/artists/:artistId.
         id: 'you',
         label: 'You',
         visibleWhen: (auth: AuthState) => auth.isAuthenticated,

@@ -4,6 +4,7 @@ import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import type { ParamListBase } from '@react-navigation/native';
 import { useAuth, useBrowserHandoff } from 'wp-native-shell';
+import { MyArtists } from '../../../src/artists/MyArtists';
 import { Avatar, Button } from '../../../src/components';
 import { SectionHeading, StatePanel } from '../../../src/community/components';
 import { plainText } from '../../../src/community/model';
@@ -62,6 +63,7 @@ export default function YouHome() {
             </> : null}
             <Button onPress={() => router.push('/you/edit')}>Edit profile</Button>
             <Button variant="tertiary" onPress={() => router.push('/you/settings')}>Account settings</Button>
+            <MyArtists />
             <SectionHeading>My Shows</SectionHeading>
             <Button variant={period === 'upcoming' ? 'primary' : 'tertiary'} onPress={() => setPeriod('upcoming')}>Upcoming</Button>
             <Button variant={period === 'past' ? 'primary' : 'tertiary'} onPress={() => setPeriod('past')}>Past</Button>
