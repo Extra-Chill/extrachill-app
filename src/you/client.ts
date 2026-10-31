@@ -24,5 +24,5 @@ export const changePassword = (client: WPNativeClient, current: string, password
 export const canDeleteAccount = (client: WPNativeClient) => Boolean(client.describe('extrachill/delete-my-account'));
 export function deleteAccount(client: WPNativeClient, confirmation: string) {
     if (!deletionConfirmed(canDeleteAccount(client), confirmation)) throw new Error('Account deletion is unavailable or not confirmed.');
-    return client.execute('extrachill/delete-my-account', {});
+    return client.execute('extrachill/delete-my-account', { confirm: 'DELETE' });
 }
