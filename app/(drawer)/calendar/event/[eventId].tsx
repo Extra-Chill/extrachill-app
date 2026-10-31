@@ -7,6 +7,7 @@ import { cachedEvent, EVENTS_REST_ROOT, getEvent, getAttendance, toggleGoing } f
 import { eventTime, safeLink, validEventId, mergeEvent, eventError, type CalendarEvent } from '../../../../src/events/model';
 import { CanonicalButton, CommunityHeader, StatePanel, communityStyles as styles } from '../../../../src/community/components';
 import { communityError, plainText } from '../../../../src/community/model';
+import { venueIdentifier } from '../../../../src/venues/model';
 
 export default function EventDetail() {
     const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -93,6 +94,7 @@ export default function EventDetail() {
     const text = { color: theme.colors.text, fontFamily: theme.typography.fontFamily };
     const ticket = safeLink(event?.ticket_url);
     const permalink = safeLink(event?.permalink);
+    const venueId = venueIdentifier(event?.venue);
     return (
         <SafeAreaView edges={['top', 'bottom']} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <CommunityHeader title="Event" leadingLabel="Back" onLeadingPress={() => router.canGoBack() ? router.back() : router.replace('/calendar')} />
@@ -107,7 +109,9 @@ export default function EventDetail() {
                     <Text style={[styles.body, text]}>{event.datetime.slice(0, 10)}</Text>
                     <Text style={[styles.body, text]}>{eventTime(event)}</Text>
                     {!event.venue?.timezone ? <Text style={[styles.meta, text]}>Venue-local time; timezone not supplied.</Text> : null}
-                    {event.venue ? <Text style={[styles.body, text]}>{event.venue.name}{event.venue.formatted_address ? `\n${event.venue.formatted_address}` : ''}</Text> : null}
+                    {event.venue ? <Pressable accessibilityRole="button" disabled={!venueId} onPress={() => venueId && router.push({ pathname: '/calendar/venue/[venueId]', params: { venueId } })}>
+                        <Text style={[styles.body, text, { color: venueId ? theme.colors.primary : theme.colors.text }]}>{event.venue.name}{event.venue.formatted_address ? `\n${event.venue.formatted_address}` : ''}</Text>
+                    </Pressable> : null}
                     {event.performer?.name ? <Text style={[styles.body, text]}>{event.performer.name}</Text> : !event.content_html ? <Text style={[styles.body, text]}>Lineup and full description are available on the event website.</Text> : null}
                     {event.content_html ? <Text style={[styles.body, text]}>{plainText(event.content_html)}</Text> : null}
                     {currentDetail?.error ? <StatePanel message={currentDetail.error.message} actionLabel="Try again" onAction={() => void loadDetail()} /> : null}
