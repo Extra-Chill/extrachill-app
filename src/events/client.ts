@@ -21,10 +21,10 @@ export function getEvent(client: WPNativeClient, id: number): Promise<CalendarEv
     return client.execute<CalendarEvent>('data-machine-events/get-event', { event_id: id });
 }
 export function getAttendance(client: WPNativeClient, eventId: number) {
-    return client.execute<{ count: number; user_marked: boolean }>('extrachill/get-event-attendance', { event_id: eventId, include_attendees: false });
+    return client.execute<{ count: number; user_marked: boolean; timing: string }>('extrachill/get-event-attendance', { event_id: eventId, include_attendees: false });
 }
 export function toggleGoing(client: WPNativeClient, eventId: number) {
-    return client.execute<{ count: number; marked: boolean }>('extrachill/toggle-event-mark', { event_id: eventId });
+    return client.execute<{ count: number; marked: boolean; timing: string }>('extrachill/toggle-event-mark', { event_id: eventId });
 }
 // Keep the actual server payload, not a reconstructed event in URL parameters.
 const events = new Map<number, CalendarEvent>();
