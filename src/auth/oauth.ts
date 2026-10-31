@@ -1,24 +1,16 @@
-/**
- * Google OAuth hook — extracted from context.tsx (M7.2.3).
- *
- * Handles Google Sign-In lazy loading, OAuth config fetching, and the
- * loginWithGoogle action. EC-specific REST routes are handled by a
- * lightweight fetch client in ec-rest-client.ts (M8 retirement, #37).
- *
- * Consumers call useGoogleAuth() alongside useAuth() from wp-native-shell.
- */
+/** Provider OAuth hooks sharing configuration and EC token storage. */
 
 import { useEffect, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
+import { buildAppleLoginRequest, hashAppleNonce, withAppleCancellation } from './apple';
 import type { OAuthConfigResponse, OnboardingStatusResponse, ECStoredTokens } from '../types/oauth';
 import { ECRestClient } from './ec-rest-client';
 import { useAuth } from 'wp-native-shell';
 import { storeTokens, getTokens, clearTokens, getDeviceId } from './storage';
 
-// ─── Module-level EC REST client (Google OAuth REST routes) ─────────────────
-// ECRestClient replaces @extrachill/api-client for the two EC-specific REST
-// endpoints (getOAuthConfig, loginWithGoogle) that aren't wp-native abilities.
-// This retires fully when those flows move to abilities.
+// EC-specific OAuth routes that aren't wp-native abilities.
 
 const ecClient = new ECRestClient({
     baseUrl: 'https://extrachill.com/wp-json',
@@ -48,6 +40,29 @@ const ecClient = new ECRestClient({
 
 let googleSignInModule: typeof import('@react-native-google-signin/google-signin') | null = null;
 let oauthConfigCache: OAuthConfigResponse | null = null;
+let oauthConfigRequest: Promise<OAuthConfigResponse> | null = null;
+
+/** Both provider hooks share one in-flight request and its successful result. */
+function useOAuthConfig(): OAuthConfigResponse | null {
+    const [config, setConfig] = useState(oauthConfigCache);
+    useEffect(() => {
+        let cancelled = false;
+        if (!oauthConfigRequest) {
+            oauthConfigRequest = ecClient.getOAuthConfig().then(result => {
+                oauthConfigCache = result;
+                return result;
+            }).catch(error => {
+                oauthConfigRequest = null;
+                throw error;
+            });
+        }
+        oauthConfigRequest.then(result => {
+            if (!cancelled) setConfig(result);
+        }).catch(() => { /* Config failures silently disable provider buttons. */ });
+        return () => { cancelled = true; };
+    }, []);
+    return config;
+}
 
 /**
  * Parse an access_expires_at ISO string into a Unix timestamp (seconds).
@@ -123,26 +138,9 @@ export interface GoogleAuthActions {
  * to update the AuthProvider's state.
  */
 export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
-    const [googleEnabled, setGoogleEnabled] = useState(false);
+    const config = useOAuthConfig();
+    const googleEnabled = config?.google.enabled ?? false;
     const { client } = useAuth();
-
-    useEffect(() => {
-        let cancelled = false;
-
-        async function fetchOAuthConfig() {
-            try {
-                oauthConfigCache = await ecClient.getOAuthConfig();
-                if (!cancelled) {
-                    setGoogleEnabled(oauthConfigCache.google.enabled);
-                }
-            } catch {
-                // OAuth config fetch failed, Google Sign-In stays disabled
-            }
-        }
-
-        fetchOAuthConfig();
-        return () => { cancelled = true; };
-    }, []);
 
     const loginWithGoogle = useCallback(async (): Promise<{ onboardingCompleted: boolean }> => {
         if (!oauthConfigCache) {
@@ -204,4 +202,51 @@ export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
     }, [client]);
 
     return { googleEnabled, loginWithGoogle };
+}
+
+export function useAppleAuth() {
+    const config = useOAuthConfig();
+    const [available, setAvailable] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        if (Platform.OS === 'ios') {
+            AppleAuthentication.isAvailableAsync().then(value => {
+                if (!cancelled) setAvailable(value);
+            }).catch(() => { /* Unsupported devices leave Apple disabled. */ });
+        }
+        return () => { cancelled = true; };
+    }, []);
+
+    const appleEnabled = Platform.OS === 'ios' && !!config?.apple.enabled && available;
+    const loginWithApple = useCallback(async () => {
+        if (!appleEnabled) throw new Error('Apple Sign-In not available');
+
+        return withAppleCancellation(async () => {
+            const rawNonce = Crypto.randomUUID();
+            const nonce = await hashAppleNonce(rawNonce, value => Crypto.digestStringAsync(
+                Crypto.CryptoDigestAlgorithm.SHA256,
+                value,
+                { encoding: Crypto.CryptoEncoding.HEX },
+            ));
+            const credential = await AppleAuthentication.signInAsync({
+                requestedScopes: [
+                    AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+                    AppleAuthentication.AppleAuthenticationScope.EMAIL,
+                ],
+                nonce,
+            });
+            const response = await ecClient.loginWithApple(buildAppleLoginRequest(
+                credential, rawNonce, await getDeviceId(),
+            ));
+            await ecClient.setTokens({
+                accessToken: response.access_token,
+                refreshToken: response.refresh_token,
+                accessExpiresAt: parseExpiresAt(response.access_expires_at),
+            });
+            return { onboardingCompleted: response.onboarding_completed };
+        });
+    }, [appleEnabled]);
+
+    return { appleEnabled, loginWithApple };
 }

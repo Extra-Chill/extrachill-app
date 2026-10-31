@@ -6,7 +6,7 @@
  * Shapes match the extrachill/v1/auth REST endpoints.
  */
 
-/** Response from GET extrachill/v1/auth/oauth-config */
+/** Response from GET extrachill/v1/config/oauth */
 export interface OAuthConfigResponse {
     google: {
         enabled: boolean;
@@ -37,6 +37,19 @@ export interface GoogleLoginResponse {
     redirect_url: string;
     invite_artist_id?: number;
 }
+
+/** Apple returns the same token and onboarding payload as Google. */
+export type AppleLoginResponse = GoogleLoginResponse;
+
+export type AppleLoginRequest = {
+    identity_token: string;
+    nonce: string;
+    device_id: string;
+    given_name?: string;
+    family_name?: string;
+    registration_source: 'extrachill-app';
+    registration_method: 'apple';
+};
 
 /** Response from wp-native-shell ability extrachill/get-onboarding-status */
 export interface OnboardingStatusResponse {
