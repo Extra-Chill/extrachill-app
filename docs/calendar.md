@@ -16,8 +16,12 @@ Source checked in Extra-Chill/extrachill-events:
 `inc/abilities/events-calendar.php`, `inc/abilities/events-get-venue.php`.
 The calendar adapter supplies `id`, `title`, `datetime`, `end_datetime`, `venue`,
 `performer`, `occurrence_display`, `ticket_url`, and `permalink`. It does not
-supply a description. The screen uses performer.name, or offers the canonical
-web page for the full description. Display time is the server's
+supply a description. Detail lookup uses the public
+`data-machine-events/get-event` ability on the Events-derived client with
+`{ event_id }`, returning the same occurrence fields plus `content_html`.
+The screen renders that description with Community's existing `plainText`
+HTML-to-native-text helper and retains the canonical web handoff.
+Display time is the server's
 `occurrence_display.formatted_time_display` plus `venue.timezone`; the fallback
 is the unparsed venue-local datetime, never converted to the device timezone.
 
@@ -39,18 +43,16 @@ fabricated and no direct REST requests are used by the app.
 
 ## Follow-up / partial delivery
 
-- Bare-ID deep links after a cold launch cannot yet hydrate event details.
-  No event-by-ID ability was verified. Query-events' documented structured
-  output only supplies event_id, title, permalink and datetimes; it has no ID
-  selector or venue/lineup/ticket fields. The app retains actual calendar
-  payloads in an in-memory cache. List navigation works; uncached deep links
-  show an explicit explanation and Browse Calendar action. Add a verified
-  event-detail ability, then replace this cache-only fallback without changing
-  the contracted route.
+Event detail supports bare IDs from Inbox, Search, deep links and cold starts.
+Cached list rows display immediately and refresh from `get-event`; uncached
+IDs show a loading state. Missing events clear stale details and offer Browse
+Calendar; transient errors allow retry and preserve any cached row. Feature
+detection via `client.describe` retains cached-only behavior on older servers
+without the detail ability.
+
 - Verify authenticated ability availability, default preference resolution,
   attendance permissions, pagination, and browser handoff on a device.
-- Full description and end-time presentation remain web handoffs/follow-ups;
-  no unsupported description field has been invented.
+- End-time presentation and rich HTML formatting remain web handoffs/follow-ups.
 
 Validation: `npm run typecheck`, `npm test` (includes model helper tests).
 Release-owned version and changelogs are unchanged.

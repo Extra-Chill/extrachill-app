@@ -17,6 +17,9 @@ export async function defaultLocation(client: WPNativeClient): Promise<EventLoca
 export function searchLocations(client: WPNativeClient, search: string) {
     return client.execute<{ locations: EventLocation[] }>('extrachill/events-locations', { mode: 'search', search, limit: 20 });
 }
+export function getEvent(client: WPNativeClient, id: number): Promise<CalendarEvent> {
+    return client.execute<CalendarEvent>('data-machine-events/get-event', { event_id: id });
+}
 export function getAttendance(client: WPNativeClient, eventId: number) {
     return client.execute<{ count: number; user_marked: boolean }>('extrachill/get-event-attendance', { event_id: eventId, include_attendees: false });
 }

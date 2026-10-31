@@ -3,15 +3,18 @@ import { Pressable, RefreshControl, ScrollView, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, useBrowserHandoff, useTheme } from 'wp-native-shell';
-import { cachedEvent, EVENTS_REST_ROOT, getAttendance, toggleGoing } from '../../../../src/events/client';
-import { eventTime, safeLink, validEventId } from '../../../../src/events/model';
+import { cachedEvent, EVENTS_REST_ROOT, getEvent, getAttendance, toggleGoing } from '../../../../src/events/client';
+import { eventTime, safeLink, validEventId, mergeEvent, eventError, type CalendarEvent } from '../../../../src/events/model';
 import { CanonicalButton, CommunityHeader, StatePanel, communityStyles as styles } from '../../../../src/community/components';
-import { communityError } from '../../../../src/community/model';
+import { communityError, plainText } from '../../../../src/community/model';
 
 export default function EventDetail() {
     const { eventId } = useLocalSearchParams<{ eventId: string }>();
     const id = validEventId(eventId) ? Number(eventId) : 0;
-    const event = cachedEvent(id);
+    const [detail, setDetail] = useState<{ id: number; event: CalendarEvent | null; loading: boolean; error: ReturnType<typeof eventError> | null } | null>(null);
+    const currentDetail = detail?.id === id ? detail : null;
+    const event = currentDetail ? currentDetail.event : cachedEvent(id);
+    const detailLoading = currentDetail ? currentDetail.loading : Boolean(id);
     const { client, user } = useAuth();
     const { handle } = useBrowserHandoff();
     const router = useRouter();
@@ -21,6 +24,30 @@ export default function EventDetail() {
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState('');
+    const detailRequest = useRef(0);
+    const loadDetail = async () => {
+        const token = ++detailRequest.current;
+        if (!id) return;
+        const cached = event ?? cachedEvent(id);
+        setDetail({ id, event: cached ?? null, loading: true, error: null });
+        try {
+            // Older servers keep the existing cached-only experience.
+            const supported = Boolean(eventsClient.describe('data-machine-events/get-event'));
+            const fetched = supported ? await getEvent(eventsClient, id) : null;
+            if (token === detailRequest.current) {
+                setDetail({ id, event: mergeEvent(cached, fetched), loading: false, error: null });
+            }
+        } catch (err) {
+            if (token === detailRequest.current) {
+                const mapped = eventError(err);
+                setDetail({ id, event: mapped.kind === 'not-found' ? null : cached ?? null, loading: false, error: mapped });
+            }
+        }
+    };
+    useEffect(() => {
+        void loadDetail();
+        return () => { detailRequest.current++; };
+    }, [eventsClient, id]);
     const request = useRef(0);
     const pending = useRef(false);
     const load = async () => {
@@ -43,7 +70,8 @@ export default function EventDetail() {
         setSending(false);
         void load();
         return () => { request.current++; };
-    }, [eventsClient, id]);
+    }, [eventsClient, id, event?.id]);
+    const refresh = () => { void loadDetail(); void load(); };
     const toggle = async () => {
         if (pending.current || loading || !attendance || !user) return;
         pending.current = true;
@@ -68,14 +96,21 @@ export default function EventDetail() {
     return (
         <SafeAreaView edges={['top', 'bottom']} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <CommunityHeader title="Event" leadingLabel="Back" onLeadingPress={() => router.canGoBack() ? router.back() : router.replace('/calendar')} />
-            {!event ? <StatePanel message={id ? 'Open this event from Calendar to see its details. Direct event lookup is not yet available.' : 'This event could not be found.'} actionLabel="Browse Calendar" onAction={() => router.replace('/calendar')} /> : (
-                <ScrollView contentContainerStyle={styles.scrollContent} refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void load()} tintColor={theme.colors.primary} />}>
+            {!event ? <StatePanel
+                loading={detailLoading}
+                message={detailLoading ? 'Loading event...' : currentDetail?.error?.message ?? (id ? 'Open this event from Calendar to see its details. Direct event lookup is not yet available.' : "This event isn't available anymore.")}
+                actionLabel={detailLoading ? undefined : currentDetail?.error?.kind === 'retry' ? 'Try again' : 'Browse Calendar'}
+                onAction={() => currentDetail?.error?.kind === 'retry' ? void loadDetail() : router.replace('/calendar')}
+            /> : (
+                <ScrollView contentContainerStyle={styles.scrollContent} refreshControl={<RefreshControl refreshing={loading || detailLoading} onRefresh={refresh} tintColor={theme.colors.primary} />}>
                     <Text style={[styles.cardTitle, text]}>{event.title}</Text>
                     <Text style={[styles.body, text]}>{event.datetime.slice(0, 10)}</Text>
                     <Text style={[styles.body, text]}>{eventTime(event)}</Text>
                     {!event.venue?.timezone ? <Text style={[styles.meta, text]}>Venue-local time; timezone not supplied.</Text> : null}
                     {event.venue ? <Text style={[styles.body, text]}>{event.venue.name}{event.venue.formatted_address ? `\n${event.venue.formatted_address}` : ''}</Text> : null}
-                    {event.performer?.name ? <Text style={[styles.body, text]}>{event.performer.name}</Text> : <Text style={[styles.body, text]}>Lineup and full description are available on the event website.</Text>}
+                    {event.performer?.name ? <Text style={[styles.body, text]}>{event.performer.name}</Text> : !event.content_html ? <Text style={[styles.body, text]}>Lineup and full description are available on the event website.</Text> : null}
+                    {event.content_html ? <Text style={[styles.body, text]}>{plainText(event.content_html)}</Text> : null}
+                    {currentDetail?.error ? <StatePanel message={currentDetail.error.message} actionLabel="Try again" onAction={() => void loadDetail()} /> : null}
                     {ticket ? <CanonicalButton label="Tickets" onPress={() => void open(ticket)} /> : null}
                     {permalink ? <CanonicalButton label="Open event on web" onPress={() => void open(permalink)} /> : null}
                     {attendance ? <Text style={[styles.body, text]}>{attendance.count} going</Text> : null}
