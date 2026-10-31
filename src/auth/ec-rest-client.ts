@@ -1,10 +1,11 @@
 /**
- * Lightweight EC REST client for Google OAuth routes.
+ * Lightweight EC REST client for OAuth routes.
  *
  * Replaces @extrachill/api-client usage in oauth.ts (M8 retirement, #37).
- * Only covers the two endpoints the app still needs:
- *   - GET  extrachill/v1/auth/oauth-config
+ * Covers the app's OAuth configuration and provider login endpoints:
+ *   - GET  extrachill/v1/config/oauth
  *   - POST extrachill/v1/auth/google
+ *   - POST extrachill/v1/auth/apple
  *
  * Token lifecycle (Bearer injection, refresh, persist) is handled inline.
  * Once these routes migrate to wp-native-shell abilities, this file
@@ -14,6 +15,8 @@
 import type {
     OAuthConfigResponse,
     GoogleLoginResponse,
+    AppleLoginResponse,
+    AppleLoginRequest,
     ECStoredTokens,
 } from '../types/oauth';
 
@@ -70,9 +73,14 @@ export class ECRestClient {
 
     // ── Auth endpoints ──────────────────────────────────────────────────
 
-    /** GET extrachill/v1/auth/oauth-config */
+    /** GET extrachill/v1/config/oauth */
     async getOAuthConfig(): Promise<OAuthConfigResponse> {
-        return this.get<OAuthConfigResponse>('extrachill/v1/auth/oauth-config');
+        return this.get<OAuthConfigResponse>('extrachill/v1/config/oauth');
+    }
+
+    /** POST extrachill/v1/auth/apple */
+    async loginWithApple(data: AppleLoginRequest): Promise<AppleLoginResponse> {
+        return this.post<AppleLoginResponse>('extrachill/v1/auth/apple', data);
     }
 
     /** POST extrachill/v1/auth/google */
@@ -129,7 +137,8 @@ export class ECRestClient {
         });
 
         if (!res.ok) {
-            throw new Error(`EC REST POST ${path} failed: ${res.status}`);
+            const error = await res.json().catch(() => null);
+            throw new Error(error?.message || `EC REST POST ${path} failed: ${res.status}`);
         }
 
         return res.json() as Promise<T>;

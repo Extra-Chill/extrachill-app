@@ -18,10 +18,13 @@ import {
     Platform,
     Image,
     Pressable,
+    useColorScheme,
+    ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth, useTheme } from 'wp-native-shell';
-import { useGoogleAuth } from '../src/auth/oauth';
+import { useGoogleAuth, useAppleAuth } from '../src/auth/oauth';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { Button, TextInput, Notice, GoogleSignInButton } from '../src/components';
 
 type AuthMode = 'login' | 'register';
@@ -61,6 +64,8 @@ export default function Login() {
     const router = useRouter();
     const { login, register, sessionExpired, clearSessionExpired, client, refreshSession } = useAuth();
     const { loginWithGoogle, googleEnabled } = useGoogleAuth();
+    const { loginWithApple, appleEnabled } = useAppleAuth();
+    const colorScheme = useColorScheme();
     const theme = useTheme();
 
     const [mode, setMode] = useState<AuthMode>('login');
@@ -69,7 +74,7 @@ export default function Login() {
     const [passwordConfirm, setPasswordConfirm] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [loadingProvider, setLoadingProvider] = useState<'google' | 'apple' | null>(null);
 
     useEffect(() => {
         return () => {
@@ -132,13 +137,15 @@ export default function Login() {
         }
     };
 
-    const handleGoogleSignIn = async () => {
+    const handleProviderSignIn = async (provider: 'google' | 'apple') => {
+        if (isAnyLoading) return;
         setError(null);
-        setIsGoogleLoading(true);
+        setLoadingProvider(provider);
 
         try {
-            const result = await loginWithGoogle();
-            // Tokens stored by loginWithGoogle; sync shell's AuthProvider state.
+            const result = await (provider === 'apple' ? loginWithApple() : loginWithGoogle());
+            if (!result) return; // Apple cancellation is a silent no-op.
+            // Provider hooks store tokens; sync shell's AuthProvider state.
             await refreshSession();
             if (result.onboardingCompleted) {
                 router.replace('/(drawer)/feed');
@@ -146,16 +153,16 @@ export default function Login() {
                 router.replace('/onboarding');
             }
         } catch (err) {
-            if (err instanceof Error && err.message !== 'Sign-in cancelled') {
-                setError(err.message);
+            if (!(err instanceof Error && err.message === 'Sign-in cancelled')) {
+                setError(err instanceof Error ? err.message : 'Sign-in failed');
             }
         } finally {
-            setIsGoogleLoading(false);
+            setLoadingProvider(null);
         }
     };
 
     const isLogin = mode === 'login';
-    const isAnyLoading = isSubmitting || isGoogleLoading;
+    const isAnyLoading = isSubmitting || loadingProvider !== null;
 
     return (
         <KeyboardAvoidingView
@@ -232,7 +239,7 @@ export default function Login() {
                     </Button>
                 </View>
 
-                {googleEnabled && (
+                {(appleEnabled || googleEnabled) && (
                     <View style={[styles.dividerContainer, { marginTop: theme.spacing.lg }]}>
                         <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
                         <Text style={[styles.dividerText, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>
@@ -242,11 +249,30 @@ export default function Login() {
                     </View>
                 )}
 
+                {appleEnabled && (
+                    <View
+                        pointerEvents={isAnyLoading ? 'none' : 'auto'}
+                        accessibilityState={{ disabled: isAnyLoading, busy: loadingProvider === 'apple' }}
+                        style={{ marginTop: theme.spacing.lg, opacity: isAnyLoading ? 0.6 : 1 }}
+                    >
+                        <AppleAuthentication.AppleAuthenticationButton
+                            buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                            buttonStyle={colorScheme === 'dark'
+                                ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                                : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                            cornerRadius={theme.radii.sm}
+                            style={{ width: '100%', height: 48 }}
+                            onPress={() => handleProviderSignIn('apple')}
+                        />
+                        {loadingProvider === 'apple' && <ActivityIndicator style={{ marginTop: theme.spacing.sm }} />}
+                    </View>
+                )}
+
                 {googleEnabled && (
                     <View style={{ marginTop: theme.spacing.lg }}>
                         <GoogleSignInButton
-                            onPress={handleGoogleSignIn}
-                            loading={isGoogleLoading}
+                            onPress={() => handleProviderSignIn('google')}
+                            loading={loadingProvider === 'google'}
                             disabled={isAnyLoading}
                         />
                     </View>
