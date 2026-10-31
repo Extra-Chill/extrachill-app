@@ -1,5 +1,5 @@
 export type TimeScope = 'tonight' | 'this-weekend' | 'this-week' | 'upcoming';
-export interface EventLocation { term_id: number; name: string; slug: string; }
+export interface EventLocation { term_id: number; name: string; slug: string; lat?: number; lng?: number; latitude?: number; longitude?: number; }
 export interface CalendarEvent {
     id: number;
     title: string;
@@ -7,7 +7,7 @@ export interface CalendarEvent {
     end_datetime: string | null;
     permalink: string;
     content_html?: string;
-    venue: { name: string; timezone: string | null; formatted_address?: string } | null;
+    venue: { term_id?: number; slug?: string; name: string; timezone: string | null; formatted_address?: string } | null;
     performer: { name: string } | null;
     ticket_url: string | null;
     occurrence_display?: { formatted_time_display: string };

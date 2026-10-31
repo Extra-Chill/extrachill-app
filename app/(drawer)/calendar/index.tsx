@@ -10,6 +10,7 @@ import { eventTime, mergeDates, scopes } from '../../../src/events/model';
 import type { DateGroup, EventLocation, TimeScope } from '../../../src/events/model';
 import { CommunityHeader, StatePanel, communityStyles as styles } from '../../../src/community/components';
 import { communityError } from '../../../src/community/model';
+import { marketCoordinates } from '../../../src/venues/model';
 
 export default function Calendar() {
     const { client } = useAuth();
@@ -111,6 +112,10 @@ export default function Calendar() {
                 ListHeaderComponent={<View style={{ gap: 12 }}>
                     <View style={[styles.row, { flexWrap: 'wrap' }]}>{scopes.map(item => action(item.label, () => setScope(item.value), scope === item.value))}</View>
                     {action(location?.name || 'All locations', () => setPicker(!picker))}
+                    {action('Venues near you', () => {
+                        const coordinates = marketCoordinates(location);
+                        router.push({ pathname: '/calendar/venues', params: { market: location?.name || '', ...(coordinates ? { lat: String(coordinates.lat), lng: String(coordinates.lng) } : {}) } });
+                    })}
                     {preferenceError ? <Text style={text}>{preferenceError}</Text> : null}
                     {picker ? <View style={{ gap: 8 }}>
                         <TextInput accessibilityLabel="Search event locations" placeholder="Search locations" placeholderTextColor={theme.colors.textMuted} value={search} onChangeText={setSearch} style={[styles.card, text, { borderColor: theme.colors.border }]} />
