@@ -4,21 +4,8 @@ import type { ReportReason, ReportResult, ReportTarget } from './moderation-mode
 export { REPORT_REASONS, buildReportInput, reportMessage } from './moderation-model';
 export type { ReportReason, ReportResult, ReportTarget } from './moderation-model';
 
-export const moderationAbilities = {
-    report: 'extrachill/community-report-content',
-    block: 'extrachill/community-block-user',
-    unblock: 'extrachill/community-unblock-user',
-    list: 'extrachill/community-list-blocked-users',
-} as const;
-
-export function moderationAvailable(client: WPNativeClient) {
-    return {
-        report: Boolean(client.describe(moderationAbilities.report)),
-        block: Boolean(client.describe(moderationAbilities.block)),
-        unblock: Boolean(client.describe(moderationAbilities.unblock)),
-        list: Boolean(client.describe(moderationAbilities.list)),
-    };
-}
+import { moderationAbilities } from './moderation-model';
+export { moderationAbilities, moderationAvailable } from './moderation-model';
 
 export function reportContent(client: WPNativeClient, target: ReportTarget, reason: ReportReason, note = '') {
     return client.execute<ReportResult>(moderationAbilities.report, buildReportInput(target, reason, note));

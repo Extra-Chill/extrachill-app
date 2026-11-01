@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useSiteClient } from '../network/site-client';
+import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from 'wp-native-shell';
 import { Button } from '../components';
@@ -8,7 +9,7 @@ import { ARTIST_REST_ROOT, getUserArtists, type ArtistMembership } from './clien
 
 export function MyArtists() {
     const { client, user } = useAuth();
-    const artistClient = useMemo(() => client.derive(ARTIST_REST_ROOT), [client]);
+    const { client: artistClient } = useSiteClient(ARTIST_REST_ROOT);
     const router = useRouter();
     const [artists, setArtists] = useState<ArtistMembership[]>([]);
     const [error, setError] = useState(false);

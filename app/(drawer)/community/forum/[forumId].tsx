@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useSiteClient } from '../../../../src/network/site-client';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,7 +17,7 @@ export default function ForumTopics() {
     const { client } = useAuth();
     const { handle } = useBrowserHandoff();
     const theme = useTheme();
-    const communityClient = useMemo(() => client.derive(COMMUNITY_REST_ROOT), [client]);
+    const { client: communityClient, ready } = useSiteClient(COMMUNITY_REST_ROOT);
     const forumId = Number(params.forumId);
     const [topics, setTopics] = useState<Topic[]>([]);
     const [page, setPage] = useState(1);
@@ -92,7 +93,7 @@ export default function ForumTopics() {
                                 {item.status === 'closed' ? <Text style={[communityStyles.meta, { color: theme.colors.error }]}>Closed</Text> : null}
                             </View>
                             <IdentityLine authorId={item.author_id} authorName={item.author_name} date={item.date} voice={item.public_voice} />
-                            <ModerationActions client={communityClient} postId={item.topic_id} authorId={item.author_id} authorName={item.author_name} onBlocked={async () => { setTopics([]); await load(); }} />
+                            <ModerationActions ready={ready} client={communityClient} postId={item.topic_id} authorId={item.author_id} authorName={item.author_name} onBlocked={async () => { setTopics([]); await load(); }} />
                             <Text style={[communityStyles.meta, { color: theme.colors.textMuted }]}>{item.reply_count} replies · {item.voice_count} participants</Text>
                         </Pressable>
                     )}

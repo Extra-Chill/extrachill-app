@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useSiteClient } from '../../../src/network/site-client';
+import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
@@ -18,7 +19,7 @@ export default function CommunityHome() {
     const { client, user } = useAuth();
     const { handle } = useBrowserHandoff();
     const theme = useTheme();
-    const communityClient = useMemo(() => client.derive(COMMUNITY_REST_ROOT), [client]);
+    const { client: communityClient, ready } = useSiteClient(COMMUNITY_REST_ROOT);
     const [forums, setForums] = useState<Forum[]>([]);
     const [activity, setActivity] = useState<ActivityItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -49,7 +50,7 @@ export default function CommunityHome() {
 
     return (
         <SafeAreaView style={[communityStyles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'bottom']}>
-            <CommunityHeader title="Community" subtitle="Recent conversations and rooms" onLeadingPress={() => navigation.openDrawer()} trailing={user && moderationAvailable(communityClient).list ? <Pressable accessibilityRole="button" onPress={() => router.push('/community/blocked')}><Text style={{ color: theme.colors.primary }}>Blocked members</Text></Pressable> : null} />
+            <CommunityHeader title="Community" subtitle="Recent conversations and rooms" onLeadingPress={() => navigation.openDrawer()} trailing={user && ready && moderationAvailable(communityClient).list ? <Pressable accessibilityRole="button" onPress={() => router.push('/community/blocked')}><Text style={{ color: theme.colors.primary }}>Blocked members</Text></Pressable> : null} />
             {loading ? <StatePanel loading message="Loading Community..." /> : error ? (
                 <StatePanel message={error} actionLabel="Try again" onAction={() => void load()} />
             ) : (

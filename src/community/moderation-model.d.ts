@@ -1,3 +1,5 @@
+export const moderationAbilities: Record<'report' | 'block' | 'unblock' | 'list', string>;
+export function moderationAvailable(client: { describe(name: string): unknown }, ready?: boolean): Record<'report' | 'block' | 'unblock' | 'list', boolean>;
 export type ReportReason = 'spam' | 'harassment' | 'hate' | 'sexual' | 'other';
 export type ReportTarget = { post_id: number; user_id?: never } | { user_id: number; post_id?: never };
 export interface ReportResult { report_id: number; status: 'open'; deduplicated: boolean }

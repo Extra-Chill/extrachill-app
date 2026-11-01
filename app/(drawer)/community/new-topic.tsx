@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSiteClient } from '../../../src/network/site-client';
+import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, Text, TextInput as NativeTextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +15,7 @@ export default function NewTopic() {
     const router = useRouter();
     const { client, user } = useAuth();
     const theme = useTheme();
-    const communityClient = useMemo(() => client.derive(COMMUNITY_REST_ROOT), [client]);
+    const { client: communityClient } = useSiteClient(COMMUNITY_REST_ROOT);
     const [forums, setForums] = useState<Forum[]>([]);
     const [forumId, setForumId] = useState(Number(params.forumId) || 0);
     const [title, setTitle] = useState('');

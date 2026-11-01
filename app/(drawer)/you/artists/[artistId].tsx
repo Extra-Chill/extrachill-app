@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useSiteClient } from '../../../../src/network/site-client';
+import { useCallback, useRef, useState } from 'react';
 import { Share } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useAuth, useBrowserHandoff } from 'wp-native-shell';
@@ -15,7 +16,7 @@ export default function ArtistScreen() {
     const params = useLocalSearchParams<{ artistId: string }>();
     const id = artistId(params.artistId);
     const { client, user } = useAuth();
-    const artistClient = useMemo(() => client.derive(ARTIST_REST_ROOT), [client]);
+    const { client: artistClient } = useSiteClient(ARTIST_REST_ROOT);
     const { handle } = useBrowserHandoff();
     const action = useYouAction();
     const [data, setData] = useState<Data>();

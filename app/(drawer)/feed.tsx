@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useSiteClient } from '../../src/network/site-client';
+import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import { View, Text, StyleSheet, Image, Pressable, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -44,8 +45,8 @@ export default function Feed() {
     const theme = useTheme();
     const router = useRouter();
     const { handle } = useBrowserHandoff();
-    const eventsClient = useMemo(() => client.derive(EVENTS_REST_ROOT), [client]);
-    const communityClient = useMemo(() => client.derive(COMMUNITY_REST_ROOT), [client]);
+    const { client: eventsClient } = useSiteClient(EVENTS_REST_ROOT);
+    const { client: communityClient } = useSiteClient(COMMUNITY_REST_ROOT);
     const events = useSection(useCallback(() => sceneEvents(client, eventsClient), [client, eventsClient]));
     const activity = useSection(useCallback(() => sceneActivity(communityClient), [communityClient]));
     const stories = useSection(useCallback(() => sceneStories(client), [client]));

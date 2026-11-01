@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSiteClient } from '../../../../src/network/site-client';
+import { useEffect, useRef, useState } from 'react';
 import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +15,7 @@ import { communityError, plainText } from '../../../../src/community/model';
 export default function VenueDetail() {
     const { venueId } = useLocalSearchParams<{ venueId: string }>();
     const { client } = useAuth();
-    const eventsClient = useMemo(() => client.derive(EVENTS_REST_ROOT), [client]);
+    const { client: eventsClient } = useSiteClient(EVENTS_REST_ROOT);
     const router = useRouter();
     const theme = useTheme();
     const { handle } = useBrowserHandoff();
