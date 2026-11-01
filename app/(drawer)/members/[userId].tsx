@@ -11,6 +11,7 @@ import { communityError, plainText } from '../../../src/community/model';
 import { ModerationActions } from '../../../src/community/ModerationActions';
 import { getMemberProfile, type MemberProfile } from '../../../src/members/client';
 import { memberId } from '../../../src/members/model';
+import { MemberDiscussions } from '../../../src/members/MemberDiscussions';
 import { safeLinks } from '../../../src/you/model';
 
 export default function MemberProfileScreen() {
@@ -48,6 +49,7 @@ export default function MemberProfileScreen() {
                 {[profile.custom_title, profile.local_city, profile.bio].filter(Boolean).map((text, index) => <Text key={index} style={[styles.body, { color: theme.colors.text }]}>{plainText(text)}</Text>)}
                 {safeLinks(profile.links).map((link, index) => <Pressable key={index} accessibilityRole="link" onPress={() => void handle(link.url)} style={styles.button}><Text style={{ color: theme.colors.primary }}>{link.custom_label || link.type_key || link.url}</Text></Pressable>)}
                 {id === user?.id ? <Pressable accessibilityRole="link" onPress={() => router.push('/you')} style={styles.button}><Text style={{ color: theme.colors.primary }}>Manage your profile in You</Text></Pressable> : id ? <ModerationActions ready={ready} client={moderationClient} authorId={id} authorName={profile.display_name} onBlocked={async () => router.back()} /> : null}
+                {id ? <MemberDiscussions client={moderationClient} ready={ready} authorId={id} refreshKey={generation.current} /> : null}
             </> : null}
         </ScrollView>}
     </SafeAreaView>;
