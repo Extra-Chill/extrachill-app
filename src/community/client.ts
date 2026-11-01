@@ -16,6 +16,13 @@ export function listTopics(client: WPNativeClient, forumId: number, page = 1) {
     );
 }
 
+export function listMemberTopics(client: WPNativeClient, authorId: number, page = 1) {
+    return client.execute<{ topics: Topic[]; pages: number; page: number }>(
+        'extrachill/community-list-topics',
+        { author_id: authorId, per_page: PAGE_SIZE, page },
+    );
+}
+
 export function getTopic(client: WPNativeClient, topicId: number) {
     return client.execute<{ topic: Topic; replies: Reply[]; replies_total: number; replies_pages: number }>(
         'extrachill/community-get-topic',

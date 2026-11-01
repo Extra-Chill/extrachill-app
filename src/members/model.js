@@ -1,3 +1,22 @@
+export function actorDestination(actor) {
+    const id = memberId(actor.user_id);
+    if (id !== null) return { kind: 'native', path: `/members/${id}` };
+    return actor.profile_url ? { kind: 'browser', url: actor.profile_url } : null;
+}
+
+export function supportsAuthorTopics(ability) {
+    return Object.prototype.hasOwnProperty.call(ability?.input_schema?.properties ?? {}, 'author_id');
+}
+
+// Preserve the server's newest-first order, replacing overlapping topics in place.
+export function memberTopicsPage(current, result) {
+    return {
+        topics: [...new Map([...current, ...result.topics].map(topic => [topic.topic_id, topic])).values()],
+        page: result.page,
+        hasMore: result.page < result.pages,
+    };
+}
+
 export function memberId(value) {
     if (typeof value !== 'number' && typeof value !== 'string') return null;
     if (typeof value === 'string' && !/^\d+$/.test(value)) return null;

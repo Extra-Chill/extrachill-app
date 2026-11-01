@@ -58,7 +58,7 @@ export interface ActivityItem {
     title: string;
     timestamp: string;
     activity_type: 'discussion' | 'reply';
-    actor: { display_name: string; profile_url: string | null };
+    actor: { display_name: string; profile_url: string | null; user_id?: number };
     relationships: {
         forum: { name: string; slug: string; canonical_url: string };
         artists: Array<{ name: string; slug: string; canonical_url: string }>;

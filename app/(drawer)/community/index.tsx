@@ -12,6 +12,7 @@ import { CommunityHeader, SectionHeading, StatePanel, communityStyles } from '..
 import { communityError, displayDate, forumRows } from '../../../src/community/model';
 import { moderationAvailable } from '../../../src/community/moderation-client';
 import type { ActivityItem, Forum } from '../../../src/community/types';
+import { actorDestination } from '../../../src/members/model';
 
 export default function CommunityHome() {
     const navigation = useNavigation<DrawerNavigationProp<ParamListBase>>();
@@ -72,7 +73,7 @@ export default function CommunityHome() {
                         >
                             <Text style={[communityStyles.cardTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamilyBold ?? theme.typography.fontFamily }]}>{item.title}</Text>
                             <Text style={[communityStyles.meta, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>
-                                <Text accessibilityRole="link" onPress={(event) => { event.stopPropagation(); if (item.actor.profile_url) void handle(item.actor.profile_url); }} style={{ color: theme.colors.primary }}>{item.actor.display_name}</Text> {item.activity_type === 'reply' ? 'replied' : 'started a discussion'} in {item.relationships.forum.name}
+                                <Text accessibilityRole="link" onPress={(event) => { event.stopPropagation(); const destination = actorDestination(item.actor); if (destination?.kind === 'native') router.push(destination.path); else if (destination?.kind === 'browser') void handle(destination.url); }} style={{ color: theme.colors.primary }}>{item.actor.display_name}</Text> {item.activity_type === 'reply' ? 'replied' : 'started a discussion'} in {item.relationships.forum.name}
                             </Text>
                             <Text style={[communityStyles.meta, { color: theme.colors.textMuted }]}>{displayDate(item.timestamp)}</Text>
                         </Pressable>
