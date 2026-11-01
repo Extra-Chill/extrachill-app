@@ -1,6 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanExcerpt, displayDate, mergeStories, storyError, readerDocument } from './model.js';
+import { cleanExcerpt, displayDate, mergeStories, storyError, readerDocument, storySource, storyRouteParams } from './model.js';
+
+test('selects only known sources and falls back to the story site host', () => {
+    assert.equal(storySource(), 'main');
+    assert.equal(storySource('wire'), 'wire');
+    assert.equal(storySource('main', 'wire.extrachill.com'), 'main');
+    assert.equal(storySource(undefined, 'wire.extrachill.com'), 'wire');
+    assert.equal(storySource('unknown', 'WIRE.EXTRACHILL.COM'), 'wire');
+    assert.equal(storySource('https://evil.example', 'wire.extrachill.com.evil.example'), 'main');
+    assert.equal(storySource(undefined, 'extrachill.com'), 'main');
+});
+test('parses repeated route params deterministically and tolerates empty values', () => {
+    assert.equal(storySource(['wire', 'main']), 'wire');
+    assert.equal(storySource(['main', 'wire']), 'main');
+    assert.equal(storySource([], ['wire.extrachill.com']), 'wire');
+    assert.equal(storySource('', ''), 'main');
+});
+test('story routes carry the source and host, including when ids overlap across sites', () => {
+    const item = { id: 42, site: { host: 'wire.extrachill.com' } };
+    assert.deepEqual(storyRouteParams(item), { storyId: '42', source: 'wire', host: 'wire.extrachill.com' });
+    assert.equal(storyRouteParams(item, 'main').source, 'main');
+    const route = storyRouteParams(item, 'wire');
+    assert.equal(storySource(route.source, route.host), 'wire');
+    assert.equal(storySource(undefined, route.host), 'wire');
+});
 
 test('cleans markup, entities and whitespace from excerpts', () => {
     assert.equal(cleanExcerpt('<p>A &amp; B&nbsp; &#x1f3b8;</p>\n<p>More</p>'), 'A & B 🎸 More');

@@ -1,5 +1,16 @@
 import { plainText } from '../community/model.js';
 
+// Expo Router can supply repeated query parameters as arrays. Only accept known
+// sources; never turn a route parameter into an arbitrary network destination.
+export function storySource(source, host) {
+    const value = Array.isArray(source) ? source[0] : source;
+    if (value === 'main' || value === 'wire') return value;
+    const siteHost = Array.isArray(host) ? host[0] : host;
+    return typeof siteHost === 'string' && siteHost.toLowerCase() === 'wire.extrachill.com' ? 'wire' : 'main';
+}
+export function storyRouteParams(item, source) {
+    return { storyId: String(item.id), source: storySource(source, item.site?.host), host: item.site?.host };
+}
 export function cleanExcerpt(value) {
     return plainText(value).replace(/\s+/g, ' ').trim();
 }

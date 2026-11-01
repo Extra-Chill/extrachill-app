@@ -1,5 +1,7 @@
 import type { WPNativeClient } from 'wp-native-client';
 
+export const WIRE_REST_ROOT = 'https://wire.extrachill.com/wp-json/';
+
 export interface StoryItem {
     id: number;
     title: string;
