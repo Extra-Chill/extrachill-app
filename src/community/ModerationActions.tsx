@@ -6,12 +6,12 @@ import { communityStyles } from './components';
 import { blockMember, moderationAvailable, reportContent, reportMessage, REPORT_REASONS } from './moderation-client';
 import type { ReportReason } from './moderation-model';
 
-export function ModerationActions({ client, postId, authorId, authorName, onBlocked }: {
-    client: WPNativeClient; postId?: number; authorId: number; authorName: string; onBlocked: () => Promise<void>;
+export function ModerationActions({ client, ready, postId, authorId, authorName, onBlocked }: {
+    client: WPNativeClient; ready: boolean; postId?: number; authorId: number; authorName: string; onBlocked: () => Promise<void>;
 }) {
     const { user } = useAuth();
     const theme = useTheme();
-    const available = moderationAvailable(client);
+    const available = moderationAvailable(client, ready);
     const [open, setOpen] = useState(false);
     const [reason, setReason] = useState<ReportReason>('spam');
     const [note, setNote] = useState('');

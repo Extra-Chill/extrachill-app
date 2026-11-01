@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSiteClient } from '../../../../src/network/site-client';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,7 +23,7 @@ export default function EventDetail() {
     const { handle } = useBrowserHandoff();
     const router = useRouter();
     const theme = useTheme();
-    const eventsClient = useMemo(() => client.derive(EVENTS_REST_ROOT), [client]);
+    const { client: eventsClient, ready, error: discoveryError, retry } = useSiteClient(EVENTS_REST_ROOT);
     const [attendance, setAttendance] = useState<{ count: number; user_marked: boolean; timing: string } | null>(null);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
@@ -33,7 +34,7 @@ export default function EventDetail() {
     const detailRequest = useRef(0);
     const loadDetail = async () => {
         const token = ++detailRequest.current;
-        if (!id) return;
+        if (!id || !ready) return;
         const cached = event ?? cachedEvent(id);
         setDetail({ id, event: cached ?? null, loading: true, error: null });
         try {
@@ -53,7 +54,7 @@ export default function EventDetail() {
     useEffect(() => {
         void loadDetail();
         return () => { detailRequest.current++; };
-    }, [eventsClient, id]);
+    }, [eventsClient, id, ready]);
     const request = useRef(0);
     const pending = useRef(false);
     const load = async () => {
@@ -103,7 +104,7 @@ export default function EventDetail() {
     return (
         <SafeAreaView edges={['top', 'bottom']} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <CommunityHeader title="Event" leadingLabel="Back" onLeadingPress={() => router.canGoBack() ? router.back() : router.replace('/calendar')} />
-            {!event ? <StatePanel
+            {discoveryError ? <StatePanel message="Could not load event features." actionLabel="Try again" onAction={retry} /> : !event ? <StatePanel
                 loading={detailLoading}
                 message={detailLoading ? 'Loading event...' : currentDetail?.error?.message ?? (id ? 'Open this event from Calendar to see its details. Direct event lookup is not yet available.' : "This event isn't available anymore.")}
                 actionLabel={detailLoading ? undefined : currentDetail?.error?.kind === 'retry' ? 'Try again' : 'Browse Calendar'}

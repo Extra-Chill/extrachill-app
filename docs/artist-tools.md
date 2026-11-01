@@ -6,7 +6,7 @@ My Artists lives in the existing **You** drawer section (`navigation.sections` i
 
 ## Transport
 
-All reads use `useAuth().client.derive(ARTIST_REST_ROOT)`, where the root is `https://artist.extrachill.com/wp-json/`, explicitly allowlisted in app config. The typed wrappers in `src/artists/client.ts` call only WordPress abilities:
+All reads use `useSiteClient(ARTIST_REST_ROOT)` from `src/network/site-client.ts`, which caches derived clients and discovers their ability catalogs per shell client and site root, where the root is `https://artist.extrachill.com/wp-json/`, explicitly allowlisted in app config. The typed wrappers in `src/artists/client.ts` call only WordPress abilities:
 
 - `extrachill/get-user-artists`: `{ user_id }`
 - `extrachill/artist-get`: `{ id }`

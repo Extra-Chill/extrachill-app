@@ -25,4 +25,15 @@ function reportMessage(result, error) {
         : 'Thanks, a moderator will take a look.';
 }
 
-module.exports = { REPORT_REASONS, buildReportInput, reportMessage };
+const moderationAbilities = {
+    report: 'extrachill/community-report-content',
+    block: 'extrachill/community-block-user',
+    unblock: 'extrachill/community-unblock-user',
+    list: 'extrachill/community-list-blocked-users',
+};
+
+function moderationAvailable(client, ready = true) {
+    return Object.fromEntries(Object.entries(moderationAbilities).map(([key, name]) => [key, ready && Boolean(client.describe(name))]));
+}
+
+module.exports = { REPORT_REASONS, buildReportInput, reportMessage, moderationAbilities, moderationAvailable };

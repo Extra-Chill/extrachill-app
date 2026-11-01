@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSiteClient } from '../../../src/network/site-client';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +20,7 @@ export default function MemberProfileScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { handle } = useBrowserHandoff();
-    const moderationClient = useMemo(() => client.derive(COMMUNITY_REST_ROOT), [client]);
+    const { client: moderationClient, ready } = useSiteClient(COMMUNITY_REST_ROOT);
     const [profile, setProfile] = useState<MemberProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -46,7 +47,7 @@ export default function MemberProfileScreen() {
                 <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{profile.display_name}</Text>
                 {[profile.custom_title, profile.local_city, profile.bio].filter(Boolean).map((text, index) => <Text key={index} style={[styles.body, { color: theme.colors.text }]}>{plainText(text)}</Text>)}
                 {safeLinks(profile.links).map((link, index) => <Pressable key={index} accessibilityRole="link" onPress={() => void handle(link.url)} style={styles.button}><Text style={{ color: theme.colors.primary }}>{link.custom_label || link.type_key || link.url}</Text></Pressable>)}
-                {id === user?.id ? <Pressable accessibilityRole="link" onPress={() => router.push('/you')} style={styles.button}><Text style={{ color: theme.colors.primary }}>Manage your profile in You</Text></Pressable> : id ? <ModerationActions client={moderationClient} authorId={id} authorName={profile.display_name} onBlocked={async () => router.back()} /> : null}
+                {id === user?.id ? <Pressable accessibilityRole="link" onPress={() => router.push('/you')} style={styles.button}><Text style={{ color: theme.colors.primary }}>Manage your profile in You</Text></Pressable> : id ? <ModerationActions ready={ready} client={moderationClient} authorId={id} authorName={profile.display_name} onBlocked={async () => router.back()} /> : null}
             </> : null}
         </ScrollView>}
     </SafeAreaView>;

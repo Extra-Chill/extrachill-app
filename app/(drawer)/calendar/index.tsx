@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSiteClient } from '../../../src/network/site-client';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, SectionList, Text, TextInput, View } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
@@ -17,7 +18,7 @@ export default function Calendar() {
     const theme = useTheme();
     const router = useRouter();
     const navigation = useNavigation<DrawerNavigationProp<ParamListBase>>();
-    const eventsClient = useMemo(() => client.derive(EVENTS_REST_ROOT), [client]);
+    const { client: eventsClient } = useSiteClient(EVENTS_REST_ROOT);
     const [scope, setScope] = useState<TimeScope>('tonight');
     const [location, setLocation] = useState<EventLocation | null>(null);
     const [ready, setReady] = useState(false);
