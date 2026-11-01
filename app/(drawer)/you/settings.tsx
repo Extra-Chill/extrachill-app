@@ -7,6 +7,7 @@ import { SectionHeading, StatePanel } from '../../../src/community/components';
 import { canDeleteAccount, changeEmail, changePassword, getPreferences, getSettings, updatePreferences, updateSettings, type Settings } from '../../../src/you/client';
 import { YouFrame, YouText, useYouAction } from '../../../src/you/components';
 import { passwordError, youError } from '../../../src/you/model';
+import { NewsletterSettings } from '../../../src/newsletter/components';
 
 export default function AccountSettings() {
     const { client, logout } = useAuth();
@@ -58,6 +59,7 @@ export default function AccountSettings() {
                 setCurrent(''); setPassword(''); setConfirm('');
             }, 'Password changed.')}>Change password</Button>
         </> : null}
+        <NewsletterSettings client={client} />
         <YouText>{action.message}</YouText>
         <Button variant="tertiary" onPress={() => void action.run(() => handle('https://extrachill.com/privacy-policy/'), '')}>Privacy policy</Button>
         <Button variant="tertiary" onPress={() => void action.run(() => handle('https://extrachill.com/contact-us/'), '')}>Support</Button>
