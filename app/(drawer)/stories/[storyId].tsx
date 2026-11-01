@@ -1,18 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Image, Linking, Platform, ScrollView, Share, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useAuth, useBrowserHandoff, useTheme } from 'wp-native-shell';
 import { CommunityHeader, CanonicalButton, StatePanel, communityStyles as styles } from '../../../src/community/components';
-import { canReadStories, getStory, type StoryDetail } from '../../../src/stories/client';
-import { cleanExcerpt, displayDate, readerDocument, storyError } from '../../../src/stories/model';
+import { getStory, WIRE_REST_ROOT, type StoryDetail } from '../../../src/stories/client';
+import { cleanExcerpt, displayDate, readerDocument, storyError, storySource } from '../../../src/stories/model';
 
 export default function Story() {
-    const { storyId } = useLocalSearchParams<{ storyId: string }>();
+    const { storyId, source, host } = useLocalSearchParams<{ storyId: string; source?: string | string[]; host?: string | string[] }>();
     const id = Number(storyId);
     const router = useRouter();
     const { client } = useAuth();
+    const selectedSource = storySource(source, host);
+    const storyClient = useMemo(() => selectedSource === 'wire' ? client.derive(WIRE_REST_ROOT) : client, [client, selectedSource]);
+    const siteRoot = selectedSource === 'wire' ? 'https://wire.extrachill.com/' : 'https://extrachill.com/';
+    const siteName = selectedSource === 'wire' ? 'Festival Wire' : 'extrachill.com';
     const { handle } = useBrowserHandoff();
     const theme = useTheme();
     const [story, setStory] = useState<StoryDetail | null>(null);
@@ -25,16 +29,16 @@ export default function Story() {
         setStory(null);
         setError('');
         setLoading(true);
-        if (!Number.isSafeInteger(id) || id < 1 || !canReadStories(client)) {
+        if (!Number.isSafeInteger(id) || id < 1 || !storyClient.describe('extrachill/get-story')) {
             setError('This story is not available.');
             setLoading(false);
             return;
         }
-        getStory(client, id).then(result => { if (active) setStory(result); })
+        getStory(storyClient, id).then(result => { if (active) setStory(result); })
             .catch(err => { if (active) setError(storyError(err)); })
             .finally(() => { if (active) setLoading(false); });
         return () => { active = false; };
-    }, [client, id, attempt]);
+    }, [storyClient, id, attempt]);
 
     async function openUrl(url: string) {
         if (!/^https?:\/\//i.test(url)) return;
@@ -62,14 +66,14 @@ export default function Story() {
                     {Object.entries(story.terms).flatMap(([taxonomy, terms]) => terms.map(term => <Text key={`${taxonomy}:${term.id}`} style={{ color: theme.colors.textMuted, borderColor: theme.colors.border, borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4 }}>{cleanExcerpt(term.name)}</Text>))}
                 </View>
                 <View style={styles.rowBetween}>
-                    <CanonicalButton label="Open on extrachill.com" onPress={() => void openUrl(story.url)} />
+                    <CanonicalButton label={`Open on ${siteName}`} onPress={() => void openUrl(story.url)} />
                     <CanonicalButton label="Share" onPress={() => void share()} />
                 </View>
                 {actionError ? <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.textMuted }}>{actionError}</Text> : null}
             </ScrollView>
             <WebView
                 style={{ flex: 1, backgroundColor: theme.colors.background }}
-                source={{ html: readerDocument(story.content_html, theme.colors), baseUrl: 'https://extrachill.com/' }}
+                source={{ html: readerDocument(story.content_html, theme.colors), baseUrl: siteRoot }}
                 originWhitelist={['*']}
                 javaScriptEnabled={false}
                 domStorageEnabled={false}
@@ -80,11 +84,11 @@ export default function Story() {
                 mixedContentMode="never"
                 setSupportMultipleWindows={false}
                 onShouldStartLoadWithRequest={request => {
-                    if (request.url === 'about:blank' || request.url === 'https://extrachill.com/') return true;
+                    if (request.url === 'about:blank' || request.url === siteRoot) return true;
                     if (request.isTopFrame !== false) void openUrl(request.url);
                     return false;
                 }}
-                onError={() => setActionError('Unable to display story content. Open it on extrachill.com instead.')}
+                onError={() => setActionError(`Unable to display story content. Open it on ${siteName} instead.`)}
             />
         </> : null}
     </SafeAreaView>;
