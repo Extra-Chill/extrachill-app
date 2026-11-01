@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSiteClient } from '../../../src/network/site-client';
+import { useEffect, useRef, useState } from 'react';
 import { FlatList, Image, Pressable, RefreshControl, Text, View } from 'react-native';
 import type { WPNativeClient } from 'wp-native-client';
 import { useNavigation, useRouter } from 'expo-router';
@@ -15,8 +16,9 @@ export default function Stories() {
     const { client } = useAuth();
     const theme = useTheme();
     const navigation = useNavigation<DrawerNavigationProp<ParamListBase>>();
-    const wireClient = useMemo(() => client.derive(WIRE_REST_ROOT), [client]);
-    const wireAvailable = canReadStories(wireClient);
+    const { client: wireClient, ready: wireReady } = useSiteClient(WIRE_REST_ROOT);
+    // Recomputed once the wire catalog is discovered; until then only the main list shows.
+    const wireAvailable = wireReady && canReadStories(wireClient);
     const [source, setSource] = useState<StorySource>('main');
     const selectedSource = wireAvailable ? source : 'main';
 

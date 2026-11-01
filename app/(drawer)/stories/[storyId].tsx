@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useSiteClient } from '../../../src/network/site-client';
+import { useEffect, useState } from 'react';
 import { Image, Linking, Platform, ScrollView, Share, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +15,11 @@ export default function Story() {
     const router = useRouter();
     const { client } = useAuth();
     const selectedSource = storySource(source, host);
-    const storyClient = useMemo(() => selectedSource === 'wire' ? client.derive(WIRE_REST_ROOT) : client, [client, selectedSource]);
+    const wire = useSiteClient(WIRE_REST_ROOT);
+    const storyClient = selectedSource === 'wire' ? wire.client : client;
+    // The wire client discovers its catalog asynchronously; the main client is discovered by the shell.
+    const ready = selectedSource === 'wire' ? wire.ready : true;
+    const discoveryError = selectedSource === 'wire' ? wire.error : undefined;
     const siteRoot = selectedSource === 'wire' ? 'https://wire.extrachill.com/' : 'https://extrachill.com/';
     const siteName = selectedSource === 'wire' ? 'Festival Wire' : 'extrachill.com';
     const { handle } = useBrowserHandoff();
@@ -26,6 +31,11 @@ export default function Story() {
     const [loading, setLoading] = useState(true);
     useEffect(() => {
         let active = true;
+        if (!ready) {
+            setStory(null);
+            if (discoveryError) { setError(storyError(discoveryError)); setLoading(false); } else { setError(''); setLoading(true); }
+            return;
+        }
         setStory(null);
         setError('');
         setLoading(true);
@@ -38,7 +48,7 @@ export default function Story() {
             .catch(err => { if (active) setError(storyError(err)); })
             .finally(() => { if (active) setLoading(false); });
         return () => { active = false; };
-    }, [storyClient, id, attempt]);
+    }, [storyClient, id, attempt, ready, discoveryError]);
 
     async function openUrl(url: string) {
         if (!/^https?:\/\//i.test(url)) return;
@@ -57,7 +67,7 @@ export default function Story() {
 
     return <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'bottom']}>
         <CommunityHeader title="Story" leadingLabel="Back" onLeadingPress={() => router.canGoBack() ? router.back() : router.replace('/stories')} />
-        {loading ? <StatePanel loading message="Loading story..." /> : error ? <StatePanel message={error} actionLabel="Try again" onAction={() => setAttempt(value => value + 1)} /> : story ? <>
+        {loading ? <StatePanel loading message="Loading story..." /> : error ? <StatePanel message={error} actionLabel="Try again" onAction={() => { if (discoveryError) wire.retry(); setAttempt(value => value + 1); }} /> : story ? <>
             <ScrollView style={{ maxHeight: '45%' }} contentContainerStyle={styles.scrollContent}>
                 {story.featured_image ? <Image source={{ uri: story.featured_image.url }} accessibilityLabel={story.featured_image.alt} style={{ width: '100%', aspectRatio: story.featured_image.width > 0 && story.featured_image.height > 0 ? story.featured_image.width / story.featured_image.height : 1.5 }} /> : null}
                 <Text accessibilityRole="header" style={[styles.cardTitle, { color: theme.colors.text, fontFamily: theme.typography.fontFamily }]}>{cleanExcerpt(story.title)}</Text>
