@@ -1,10 +1,16 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
-// Keep release-owned metadata in app.json; only the native OAuth scheme is dynamic.
+// Keep release metadata in app.json; inject environment-owned native configuration.
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: config.name!,
   slug: config.slug!,
+  android: {
+    ...config.android,
+    ...(process.env.GOOGLE_SERVICES_JSON
+      ? { googleServicesFile: process.env.GOOGLE_SERVICES_JSON }
+      : {}),
+  },
   plugins: [
     ...(config.plugins ?? []),
     [
