@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { useRouter } from 'expo-router';
-import { useAuth, useBrowserHandoff } from 'wp-native-shell';
+import { useAuth, useBrowserHandoff, useTheme } from 'wp-native-shell';
 import { createPushLifecycle, openPush, type PushLifecycle } from './model';
 
 type Notifications = typeof import('expo-notifications');
@@ -19,6 +19,10 @@ function supported() {
 
 export function PushProvider({ children }: { children: ReactNode }) {
     const { client, isAuthenticated, logout } = useAuth();
+    const theme = useTheme();
+    const panel = { padding: theme.spacing.md, backgroundColor: theme.colors.surface, borderTopWidth: 1, borderTopColor: theme.colors.border };
+    const text = { color: theme.colors.text };
+    const link = { color: theme.colors.primary, padding: theme.spacing.sm };
     const { handle } = useBrowserHandoff();
     const router = useRouter();
     const lifecycle = useRef<PushLifecycle | null>(null);
@@ -90,15 +94,15 @@ export function PushProvider({ children }: { children: ReactNode }) {
     }
     return <LogoutContext.Provider value={signOut}>
         {children}
-        {prompt ? <View style={{ padding: 20, backgroundColor: '#fff', borderTopWidth: 1 }}>
-            <Text style={{ color: '#111' }}>Stay in the conversation</Text>
-            <Text style={{ color: '#111' }}>Enable push notifications for replies, mentions, and requested work. You can change this in Settings.</Text>
-            <Pressable accessibilityRole="button" onPress={() => void permissionAction.current?.().catch(error => console.warn('Push permission failed', error))}><Text style={{ color: '#1255a0', padding: 12 }}>Continue</Text></Pressable>
-            <Pressable accessibilityRole="button" onPress={() => { setPrompt(false); void AsyncStorage.setItem('push-explained', 'yes').catch(() => {}); }}><Text style={{ color: '#1255a0', padding: 12 }}>Not now</Text></Pressable>
+        {prompt ? <View style={panel}>
+            <Text style={text}>Stay in the conversation</Text>
+            <Text style={text}>Enable push notifications for replies, mentions, and requested work. You can change this in Settings.</Text>
+            <Pressable accessibilityRole="button" onPress={() => void permissionAction.current?.().catch(error => console.warn('Push permission failed', error))}><Text style={link}>Continue</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => { setPrompt(false); void AsyncStorage.setItem('push-explained', 'yes').catch(() => {}); }}><Text style={link}>Not now</Text></Pressable>
         </View> : null}
-        {notice ? <View accessibilityRole="alert" style={{ padding: 16, backgroundColor: '#fff', borderTopWidth: 1 }}>
-            <Pressable accessibilityRole="button" onPress={() => { const data = notice.data; setNotice(null); void openPush(data, actions.current).catch(error => console.warn('Push tap failed', error)); }}><Text style={{ color: '#111' }}>{notice.title}</Text></Pressable>
-            <Pressable accessibilityRole="button" onPress={() => setNotice(null)}><Text style={{ color: '#1255a0', padding: 8 }}>Dismiss</Text></Pressable>
+        {notice ? <View accessibilityRole="alert" style={panel}>
+            <Pressable accessibilityRole="button" onPress={() => { const data = notice.data; setNotice(null); void openPush(data, actions.current).catch(error => console.warn('Push tap failed', error)); }}><Text style={text}>{notice.title}</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => setNotice(null)}><Text style={link}>Dismiss</Text></Pressable>
         </View> : null}
     </LogoutContext.Provider>;
 }
