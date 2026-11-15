@@ -8,16 +8,19 @@
       "developmentClient": true,
       "distribution": "internal",
       "environment": "development",
-      "ios": { "simulator": true }
+      "ios": { "simulator": true },
+      "android": { "buildType": "apk" }
     },
     "preview": {
       "distribution": "internal",
-      "environment": "preview"
+      "environment": "preview",
+      "android": { "buildType": "apk" }
     },
     "production": {
       "distribution": "store",
       "environment": "production",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": { "buildType": "app-bundle" }
     }
   },
   "submit": {
@@ -25,6 +28,10 @@
       "ios": {
         "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID",
         "appleTeamId": "REPLACE_WITH_APPLE_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./credentials/REPLACE_WITH_PLAY_SERVICE_ACCOUNT.json",
+        "track": "internal"
       }
     }
   }
