@@ -21,9 +21,10 @@ and CHANGELOG; do not edit them for an App Store upload.
 - `submit.production.ios.ascAppId` is the numeric App Store Connect app ID, not the
   bundle ID. `appleTeamId` is the Apple team's identifier. Both remain placeholders.
 - Encryption declaration is false: the app uses HTTPS and no custom encryption.
-  Source/dependency search found no camera, photo library, or OS notification
-  permission requests. Inbox notifications are API data and settings control email,
-  not push notifications. No permission usage strings were added. Secure Store's
+  The app now requests notification permission only after a skippable explanation
+  for signed-in users. No camera or photo library permission is requested.
+  Push requires an APNs key configured via `eas credentials` for the production
+  Apple team and bundle ID; see [push setup and verification](push.md). Secure Store's
   default Face ID string is explicitly disabled because biometric authentication
   is not requested by this app.
 - Splash colors match `@extrachill/tokens`: light `#ffffff`, dark `#1a1a1a`.

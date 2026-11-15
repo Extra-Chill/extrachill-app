@@ -8,13 +8,16 @@ import { canDeleteAccount, changeEmail, changePassword, getPreferences, getSetti
 import { YouFrame, YouText, useYouAction } from '../../../src/you/components';
 import { passwordError, youError } from '../../../src/you/model';
 import { NewsletterSettings } from '../../../src/newsletter/components';
+import { usePushLogout } from '../../../src/push/context';
 
 export default function AccountSettings() {
-    const { client, logout } = useAuth();
+    const { client } = useAuth();
+    const logout = usePushLogout();
     const { handle } = useBrowserHandoff();
     const router = useRouter();
     const [settings, setSettings] = useState<Settings>();
     const [enabled, setEnabled] = useState(false);
+    const [pushEnabled, setPushEnabled] = useState<boolean>();
     const [email, setEmail] = useState('');
     const [current, setCurrent] = useState('');
     const [password, setPassword] = useState('');
@@ -27,6 +30,7 @@ export default function AccountSettings() {
         try {
             const [account, prefs] = await Promise.all([getSettings(client), getPreferences(client)]);
             setSettings(account); setEnabled(prefs.emails_enabled);
+            setPushEnabled(typeof prefs.push_enabled === 'boolean' && client.describe('extrachill/update-notification-preferences') ? prefs.push_enabled : undefined);
         } catch (e) { setError(youError(e)); } finally { setLoading(false); }
     }
     useEffect(() => { void load(); }, [client]);
@@ -40,6 +44,13 @@ export default function AccountSettings() {
             <SectionHeading>Notifications</SectionHeading>
             <YouText>Email digest for unread notifications</YouText>
             <Switch accessibilityLabel="Email digest for unread notifications" value={enabled} disabled={action.busy} onValueChange={(next) => void action.run(async () => { await updatePreferences(client, next); setEnabled(next); })} />
+            {pushEnabled !== undefined ? <>
+                <YouText>Push notifications</YouText>
+                <Switch accessibilityLabel="Push notifications" value={pushEnabled} disabled={action.busy} onValueChange={(next) => void action.run(async () => {
+                    await client.execute('extrachill/update-notification-preferences', { push_enabled: next });
+                    setPushEnabled(next);
+                })} />
+            </> : null}
             <SectionHeading>Change email</SectionHeading>
             <YouText>{`Current email: ${settings.email}`}</YouText>
             {settings.pending_email ? <YouText>{`Awaiting verification: ${settings.pending_email}`}</YouText> : null}
