@@ -15,9 +15,9 @@ and CHANGELOG; do not edit them for an App Store upload.
   the Google plugin's environment-driven `iosUrlScheme`. The fallback
   `com.googleusercontent.apps.REPLACE_WITH_IOS_CLIENT_ID` is a nonfunctional,
   clearly marked placeholder, not a real client. No Apple credentials are in git.
-- Replace `owner: replace-with-expo-owner` with the actual Expo account or organization.
-  Replace the all-zero `extra.eas.projectId` with the UUID returned by `eas init`.
-  Dynamic config means EAS may ask you to make this edit manually.
+- Expo is linked to [extra-chill/extra-chill](https://expo.dev/accounts/extra-chill/projects/extra-chill):
+  `owner` and `slug` are both `extra-chill`, and `extra.eas.projectId` is
+  `25578adc-f898-479a-a5bb-3e3500fd02ce`. No `eas init` step is needed.
 - `submit.production.ios.ascAppId` is the numeric App Store Connect app ID, not the
   bundle ID. `appleTeamId` is the Apple team's identifier. Both remain placeholders.
 - Encryption declaration is false: the app uses HTTPS and no custom encryption.
@@ -84,10 +84,12 @@ Doctor checks remain enabled. Recheck this hook and both fixes on SDK upgrades.
    `web_client_id` from the server OAuth config, not this build variable. Arrange
    for the server to return the matching iOS client ID and existing web client ID;
    verify both providers on a real device. Do not ship the fallback scheme.
-5. **Link EAS:** set the real `owner`, remove the all-zero projectId placeholder,
-   run `eas init`, and record the actual UUID in `app.json`. Fill the submission
-   IDs in `eas.json`. Confirm `npx expo config --type public` resolves the expected
-   owner, project, bundle ID and Google plugin options. Initialize/check remote
+5. **Verify the linked EAS project:** `app.json` already links owner `extra-chill`
+   and slug `extra-chill` to project ID `25578adc-f898-479a-a5bb-3e3500fd02ce`.
+   Confirm `npx expo config --type public` resolves these values, the bundle ID
+   and Google plugin options. The Apple submission IDs in `eas.json` remain
+   placeholders until Apple Developer enrollment is complete; fill them then.
+   Initialize/check remote
    iOS build numbering with `eas build:version:set -p ios` if prompted; choose a
    number greater than any existing App Store upload. Leave marketing versioning
    to release tooling.
@@ -224,6 +226,6 @@ Running 17 checks on your project...
 
 No signed build, submission or server change was attempted without an account.
 Follow-ups: Apple enrollment/App ID, server Apple activation, Google iOS client
-and runtime config, Expo owner/project linking, remote version initialization,
+and runtime config, remote version initialization,
 credentials/submission IDs, demo account, UGC moderation controls, final privacy
 answers, screenshots, device QA and TestFlight/App Review.

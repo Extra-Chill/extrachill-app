@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Extra Chill",
-    "slug": "extrachill-app",
-    "owner": "replace-with-expo-owner",
+    "slug": "extra-chill",
+    "owner": "extra-chill",
     "extra": {
       "eas": {
-        "projectId": "00000000-0000-0000-0000-000000000000"
+        "projectId": "25578adc-f898-479a-a5bb-3e3500fd02ce"
       }
     },
     "version": "0.5.0",
