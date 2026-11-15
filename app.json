@@ -45,6 +45,7 @@
     },
     "plugins": [
       "expo-router",
+      ["expo-notifications", { "defaultChannel": "default" }],
       ["expo-secure-store", { "faceIDPermission": false }],
       "expo-apple-authentication",
       "expo-font",

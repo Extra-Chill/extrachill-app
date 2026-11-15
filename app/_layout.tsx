@@ -16,6 +16,7 @@ import { WPNativeApp } from 'wp-native-shell';
 import { config, fallbackConfig } from '../extrachill.config';
 import { getFontLoadState, registeredFonts } from '../src/theme/fonts';
 import LoginScreen from './login';
+import { PushProvider } from '../src/push/context';
 
 export default function RootLayout() {
     const [fontsLoaded, fontError] = useFonts(registeredFonts);
@@ -30,7 +31,7 @@ export default function RootLayout() {
             config={fontLoadState === 'ready' ? config : fallbackConfig}
             loginScreen={LoginScreen}
         >
-            <Slot />
+            <PushProvider><Slot /></PushProvider>
         </WPNativeApp>
     );
 }

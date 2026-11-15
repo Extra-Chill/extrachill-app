@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { usePushLogout } from '../../../src/push/context';
 import { useAuth } from 'wp-native-shell';
 import { Button, TextInput } from '../../../src/components';
 import { canDeleteAccount, deleteAccount } from '../../../src/you/client';
 import { YouFrame, YouText, useYouAction } from '../../../src/you/components';
 
 export default function DeleteAccount() {
-    const { client, logout } = useAuth();
+    const { client } = useAuth();
+    const logout = usePushLogout();
     const [confirmation, setConfirmation] = useState('');
     const [deleted, setDeleted] = useState(false);
     const action = useYouAction();

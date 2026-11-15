@@ -8,7 +8,7 @@ export interface Profile extends ProfileFields {
 }
 export interface NameFields { first_name: string; last_name: string; display_name: string }
 export interface Settings extends NameFields { email: string; pending_email: string | null }
-export interface Preferences { emails_enabled: boolean; auto_subscribe_replies: boolean }
+export interface Preferences { emails_enabled: boolean; auto_subscribe_replies: boolean; push_enabled?: boolean }
 export interface Show { event_id: number; title: string; event_date: string; venue?: { name: string } | null }
 export interface ShowsPage { shows: Show[]; total: number; pages: number; page: number }
 export type Period = 'upcoming' | 'past';
