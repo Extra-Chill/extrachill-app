@@ -4,12 +4,15 @@
  * Uses wp-native-shell's useAuth() for login/register actions and
  * useGoogleAuth() from src/auth/oauth for Google Sign-In.
  *
+ * Accounts with two-step sign-in get a `challenge_required` result from any
+ * sign-in method; the in-app code step (src/two-factor) completes it.
+ *
  * After successful auth, queries `extrachill/get-onboarding-status`
  * via shell's client to determine whether to redirect to onboarding
  * or the feed.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     View,
     Text,
@@ -26,6 +29,11 @@ import { useAuth, useTheme } from 'wp-native-shell';
 import { useGoogleAuth, useAppleAuth } from '../src/auth/oauth';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Button, TextInput, Notice, GoogleSignInButton } from '../src/components';
+import { getShellDeviceId } from '../src/auth/storage';
+import { createContinueRequest, createShellSignInTransport } from '../src/two-factor/client';
+import { isChallengeRequired, parseTwoFactorChallenge, SIGN_IN_COPY, type TwoFactorChallenge } from '../src/two-factor/model';
+import { TwoStepSignIn, type SignInStepExit } from '../src/two-factor/SignInStep';
+import { config } from '../extrachill.config';
 
 type AuthMode = 'login' | 'register';
 
@@ -62,7 +70,7 @@ async function navigatePostAuth(
 
 export default function Login() {
     const router = useRouter();
-    const { login, register, sessionExpired, clearSessionExpired, client, refreshSession } = useAuth();
+    const { login, continueLogin, register, sessionExpired, clearSessionExpired, client, refreshSession } = useAuth();
     const { loginWithGoogle, googleEnabled } = useGoogleAuth();
     const { loginWithApple, appleEnabled } = useAppleAuth();
     const colorScheme = useColorScheme();
@@ -75,6 +83,33 @@ export default function Login() {
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loadingProvider, setLoadingProvider] = useState<'google' | 'apple' | null>(null);
+    const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null);
+    const twoFactorTransport = useMemo(() => createShellSignInTransport({
+        continueLogin,
+        continueRequest: createContinueRequest({
+            baseUrl: config.api.baseUrl,
+            clientId: config.api.clientId,
+            getDeviceId: getShellDeviceId,
+        }),
+    }), [continueLogin]);
+
+    /** Returns true when the result was a challenge (handled here). */
+    const handleChallenge = (result: unknown): boolean => {
+        if (!isChallengeRequired(result)) return false;
+        const parsed = parseTwoFactorChallenge(result);
+        if (parsed) {
+            setPassword('');
+            setChallenge(parsed);
+        } else {
+            setError(SIGN_IN_COPY.unsupported);
+        }
+        return true;
+    };
+
+    const exitChallenge = useCallback((reason: SignInStepExit) => {
+        setChallenge(null);
+        setError(reason === 'expired' ? SIGN_IN_COPY.expired : null);
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -102,7 +137,8 @@ export default function Login() {
 
             setIsSubmitting(true);
             try {
-                await login(email.trim(), password);
+                const result = await login(email.trim(), password);
+                if (handleChallenge(result)) return;
                 await navigatePostAuth(client, router);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Login failed');
@@ -145,6 +181,10 @@ export default function Login() {
         try {
             const result = await (provider === 'apple' ? loginWithApple() : loginWithGoogle());
             if (!result) return; // Apple cancellation is a silent no-op.
+            if (result.challenge) {
+                handleChallenge(result.challenge);
+                return;
+            }
             // Provider hooks store tokens; sync shell's AuthProvider state.
             await refreshSession();
             if (result.onboardingCompleted) {
@@ -189,105 +229,116 @@ export default function Login() {
                     {isLogin ? 'Sign in to continue' : 'Create your account'}
                 </Text>
 
-                {sessionExpired && (
-                    <Notice
-                        type="error"
-                        title="Session Expired"
-                        message="Please log in again."
+                {challenge ? (
+                    <TwoStepSignIn
+                        challenge={challenge}
+                        transport={twoFactorTransport}
+                        onSignedIn={() => navigatePostAuth(client, router)}
+                        onExit={exitChallenge}
                     />
-                )}
+                ) : (
+                    <>
+                        {sessionExpired && (
+                            <Notice
+                                type="error"
+                                title="Session Expired"
+                                message="Please log in again."
+                            />
+                        )}
 
-                {error && <Notice type="error" message={error} />}
+                        {error && <Notice type="error" message={error} />}
 
-                <TextInput
-                    placeholder={isLogin ? 'Username or email' : 'Email'}
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    keyboardType="email-address"
-                    editable={!isAnyLoading}
-                />
-
-                <TextInput
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    editable={!isAnyLoading}
-                />
-
-                {!isLogin && (
-                    <TextInput
-                        placeholder="Confirm password"
-                        value={passwordConfirm}
-                        onChangeText={setPasswordConfirm}
-                        secureTextEntry
-                        editable={!isAnyLoading}
-                    />
-                )}
-
-                <View style={{ marginTop: theme.spacing.sm }}>
-                    <Button
-                        variant="secondary"
-                        size="large"
-                        onPress={handleSubmit}
-                        loading={isSubmitting}
-                        disabled={isAnyLoading}
-                    >
-                        {isLogin ? 'Sign In' : 'Create Account'}
-                    </Button>
-                </View>
-
-                {(appleEnabled || googleEnabled) && (
-                    <View style={[styles.dividerContainer, { marginTop: theme.spacing.lg }]}>
-                        <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
-                        <Text style={[styles.dividerText, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>
-                            or
-                        </Text>
-                        <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
-                    </View>
-                )}
-
-                {appleEnabled && (
-                    <View
-                        pointerEvents={isAnyLoading ? 'none' : 'auto'}
-                        accessibilityState={{ disabled: isAnyLoading, busy: loadingProvider === 'apple' }}
-                        style={{ marginTop: theme.spacing.lg, opacity: isAnyLoading ? 0.6 : 1 }}
-                    >
-                        <AppleAuthentication.AppleAuthenticationButton
-                            buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-                            buttonStyle={colorScheme === 'dark'
-                                ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                                : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                            cornerRadius={theme.radii.sm}
-                            style={{ width: '100%', height: 48 }}
-                            onPress={() => handleProviderSignIn('apple')}
+                        <TextInput
+                            placeholder={isLogin ? 'Username or email' : 'Email'}
+                            value={email}
+                            onChangeText={setEmail}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            keyboardType="email-address"
+                            editable={!isAnyLoading}
                         />
-                        {loadingProvider === 'apple' && <ActivityIndicator style={{ marginTop: theme.spacing.sm }} />}
-                    </View>
-                )}
 
-                {googleEnabled && (
-                    <View style={{ marginTop: theme.spacing.lg }}>
-                        <GoogleSignInButton
-                            onPress={() => handleProviderSignIn('google')}
-                            loading={loadingProvider === 'google'}
-                            disabled={isAnyLoading}
+                        <TextInput
+                            placeholder="Password"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                            editable={!isAnyLoading}
                         />
-                    </View>
-                )}
 
-                <View style={[styles.toggleContainer, { marginTop: theme.spacing.lg }]}>
-                    <Text style={[styles.toggleText, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>
-                        {isLogin ? "Don't have an account? " : 'Already have an account? '}
-                    </Text>
-                    <Pressable onPress={() => switchMode(isLogin ? 'register' : 'login')} disabled={isAnyLoading}>
-                        <Text style={[styles.toggleLink, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily }]}>
-                            {isLogin ? 'Create one' : 'Sign in'}
-                        </Text>
-                    </Pressable>
-                </View>
+                        {!isLogin && (
+                            <TextInput
+                                placeholder="Confirm password"
+                                value={passwordConfirm}
+                                onChangeText={setPasswordConfirm}
+                                secureTextEntry
+                                editable={!isAnyLoading}
+                            />
+                        )}
+
+                        <View style={{ marginTop: theme.spacing.sm }}>
+                            <Button
+                                variant="secondary"
+                                size="large"
+                                onPress={handleSubmit}
+                                loading={isSubmitting}
+                                disabled={isAnyLoading}
+                            >
+                                {isLogin ? 'Sign In' : 'Create Account'}
+                            </Button>
+                        </View>
+
+                        {(appleEnabled || googleEnabled) && (
+                            <View style={[styles.dividerContainer, { marginTop: theme.spacing.lg }]}>
+                                <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+                                <Text style={[styles.dividerText, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>
+                                    or
+                                </Text>
+                                <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+                            </View>
+                        )}
+
+                        {appleEnabled && (
+                            <View
+                                pointerEvents={isAnyLoading ? 'none' : 'auto'}
+                                accessibilityState={{ disabled: isAnyLoading, busy: loadingProvider === 'apple' }}
+                                style={{ marginTop: theme.spacing.lg, opacity: isAnyLoading ? 0.6 : 1 }}
+                            >
+                                <AppleAuthentication.AppleAuthenticationButton
+                                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                                    buttonStyle={colorScheme === 'dark'
+                                        ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                                        : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                                    cornerRadius={theme.radii.sm}
+                                    style={{ width: '100%', height: 48 }}
+                                    onPress={() => handleProviderSignIn('apple')}
+                                />
+                                {loadingProvider === 'apple' && <ActivityIndicator style={{ marginTop: theme.spacing.sm }} />}
+                            </View>
+                        )}
+
+                        {googleEnabled && (
+                            <View style={{ marginTop: theme.spacing.lg }}>
+                                <GoogleSignInButton
+                                    onPress={() => handleProviderSignIn('google')}
+                                    loading={loadingProvider === 'google'}
+                                    disabled={isAnyLoading}
+                                />
+                            </View>
+                        )}
+
+                        <View style={[styles.toggleContainer, { marginTop: theme.spacing.lg }]}>
+                            <Text style={[styles.toggleText, { color: theme.colors.textMuted, fontFamily: theme.typography.fontFamily }]}>
+                                {isLogin ? "Don't have an account? " : 'Already have an account? '}
+                            </Text>
+                            <Pressable onPress={() => switchMode(isLogin ? 'register' : 'login')} disabled={isAnyLoading}>
+                                <Text style={[styles.toggleLink, { color: theme.colors.primary, fontFamily: theme.typography.fontFamily }]}>
+                                    {isLogin ? 'Create one' : 'Sign in'}
+                                </Text>
+                            </Pressable>
+                        </View>
+                    </>
+                )}
             </View>
         </KeyboardAvoidingView>
     );

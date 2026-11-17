@@ -5,17 +5,21 @@ import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import { buildAppleLoginRequest, hashAppleNonce, withAppleCancellation } from './apple';
-import type { OAuthConfigResponse, OnboardingStatusResponse, ECStoredTokens } from '../types/oauth';
+import type { OAuthConfigResponse, OnboardingStatusResponse, ECStoredTokens, SocialLoginSuccess } from '../types/oauth';
 import { ECRestClient } from './ec-rest-client';
 import { useAuth } from 'wp-native-shell';
-import { storeTokens, getTokens, clearTokens, getDeviceId } from './storage';
+import type { AuthChallengeRequirement } from 'wp-native-shell';
+import { storeTokens, getTokens, clearTokens, getShellDeviceId } from './storage';
+import { config as appConfig } from '../../extrachill.config';
 
 // EC-specific OAuth routes that aren't wp-native abilities.
 
 const ecClient = new ECRestClient({
     baseUrl: 'https://extrachill.com/wp-json',
-    getDeviceId,
-    defaultHeaders: { 'ExtraChill-Client': 'app' },
+    getDeviceId: getShellDeviceId,
+    // Same client + device as the shell so a two-step sign-in challenge
+    // started here can be completed by the shell's continueLogin.
+    defaultHeaders: { 'ExtraChill-Client': 'app', 'WP-Native-Client': appConfig.api.clientId },
 
     loadTokens: async (): Promise<ECStoredTokens | null> => {
         const tokens = await getTokens();
@@ -121,8 +125,17 @@ export interface GoogleAuthState {
     googleEnabled: boolean;
 }
 
+/** Provider sign-in either finishes or needs the in-app two-step code. */
+export type SocialSignInResult =
+    | { onboardingCompleted: boolean; challenge?: never }
+    | { challenge: AuthChallengeRequirement; onboardingCompleted?: never };
+
+function isChallengeResponse(response: SocialLoginSuccess | AuthChallengeRequirement): response is AuthChallengeRequirement {
+    return response.challenge_required === true;
+}
+
 export interface GoogleAuthActions {
-    loginWithGoogle: () => Promise<{ onboardingCompleted: boolean }>;
+    loginWithGoogle: () => Promise<SocialSignInResult>;
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
@@ -142,7 +155,7 @@ export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
     const googleEnabled = config?.google.enabled ?? false;
     const { client } = useAuth();
 
-    const loginWithGoogle = useCallback(async (): Promise<{ onboardingCompleted: boolean }> => {
+    const loginWithGoogle = useCallback(async (): Promise<SocialSignInResult> => {
         if (!oauthConfigCache) {
             throw new Error('Google Sign-In not available');
         }
@@ -165,13 +178,14 @@ export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
                 throw new Error('No ID token received from Google');
             }
 
-            const deviceId = await getDeviceId();
+            const deviceId = await getShellDeviceId();
             const authResponse = await ecClient.loginWithGoogle({
                 id_token: idToken,
                 device_id: deviceId,
                 registration_source: 'extrachill-app',
                 registration_method: 'google',
             });
+            if (isChallengeResponse(authResponse)) return { challenge: authResponse };
 
             await ecClient.setTokens({
                 accessToken: authResponse.access_token,
@@ -219,7 +233,7 @@ export function useAppleAuth() {
     }, []);
 
     const appleEnabled = Platform.OS === 'ios' && !!config?.apple.enabled && available;
-    const loginWithApple = useCallback(async () => {
+    const loginWithApple = useCallback(async (): Promise<SocialSignInResult | null> => {
         if (!appleEnabled) throw new Error('Apple Sign-In not available');
 
         return withAppleCancellation(async () => {
@@ -237,8 +251,9 @@ export function useAppleAuth() {
                 nonce,
             });
             const response = await ecClient.loginWithApple(buildAppleLoginRequest(
-                credential, rawNonce, await getDeviceId(),
+                credential, rawNonce, await getShellDeviceId(),
             ));
+            if (isChallengeResponse(response)) return { challenge: response };
             await ecClient.setTokens({
                 accessToken: response.access_token,
                 refreshToken: response.refresh_token,

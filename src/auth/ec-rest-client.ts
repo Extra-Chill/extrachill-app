@@ -7,6 +7,9 @@
  *   - POST extrachill/v1/auth/google
  *   - POST extrachill/v1/auth/apple
  *
+ * Provider logins may return a two-step sign-in challenge instead of tokens;
+ * callers complete it through src/two-factor (never a web screen).
+ *
  * Token lifecycle (Bearer injection, refresh, persist) is handled inline.
  * Once these routes migrate to wp-native-shell abilities, this file
  * can be deleted entirely.

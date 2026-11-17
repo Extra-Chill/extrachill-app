@@ -19,8 +19,11 @@ export interface OAuthConfigResponse {
     };
 }
 
-/** Response from POST extrachill/v1/auth/google */
-export interface GoogleLoginResponse {
+import type { AuthChallengeRequirement } from 'wp-native-shell';
+
+/** Successful token payload from POST extrachill/v1/auth/google|apple */
+export interface SocialLoginSuccess {
+    challenge_required?: never;
     success: boolean;
     access_token: string;
     access_expires_at: string;
@@ -34,11 +37,18 @@ export interface GoogleLoginResponse {
         profile_url?: string;
     };
     onboarding_completed: boolean;
-    redirect_url: string;
+    /** Legacy web redirect (old two-factor hand-off); the app never opens it. */
+    redirect_url?: string;
     invite_artist_id?: number;
 }
 
-/** Apple returns the same token and onboarding payload as Google. */
+/**
+ * Response from POST extrachill/v1/auth/google. Accounts with two-step
+ * sign-in get the wp-native-auth challenge shape instead of tokens.
+ */
+export type GoogleLoginResponse = SocialLoginSuccess | AuthChallengeRequirement;
+
+/** Apple returns the same token/challenge payload as Google. */
 export type AppleLoginResponse = GoogleLoginResponse;
 
 export type AppleLoginRequest = {
