@@ -9,9 +9,10 @@ import { YouFrame, YouText, useYouAction } from '../../../src/you/components';
 import { passwordError, youError } from '../../../src/you/model';
 import { NewsletterSettings } from '../../../src/newsletter/components';
 import { usePushLogout } from '../../../src/push/context';
+import { SecuritySettings } from '../../../src/two-factor/SecuritySettings';
 
 export default function AccountSettings() {
-    const { client } = useAuth();
+    const { client, user } = useAuth();
     const logout = usePushLogout();
     const { handle } = useBrowserHandoff();
     const router = useRouter();
@@ -69,6 +70,7 @@ export default function AccountSettings() {
                 await changePassword(client, current, password, confirm);
                 setCurrent(''); setPassword(''); setConfirm('');
             }, 'Password changed.')}>Change password</Button>
+            {user ? <SecuritySettings client={client} userId={user.id} /> : null}
         </> : null}
         <NewsletterSettings client={client} />
         <YouText>{action.message}</YouText>

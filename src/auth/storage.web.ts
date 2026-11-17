@@ -61,3 +61,19 @@ export const secureStoreAdapter: TokenStorageAdapter = {
     setItem: async (key: string, value: string) => localStorage.setItem(key, value),
     removeItem: async (key: string) => localStorage.removeItem(key),
 };
+
+/**
+ * Device id owned by wp-native-shell's auth stack. Login challenges are bound
+ * to the device id and client that started them, so Google/Apple sign-in must
+ * send this id for the shell's continueLogin to complete the challenge.
+ * Mirrors the shell's own get-or-create (same key, UUID v4).
+ */
+const SHELL_DEVICE_ID_KEY = 'wp_native_device_id';
+
+export async function getShellDeviceId(): Promise<string> {
+    const existing = await secureStoreAdapter.getItem(SHELL_DEVICE_ID_KEY);
+    if (existing) return existing;
+    const deviceId = Crypto.randomUUID();
+    await secureStoreAdapter.setItem(SHELL_DEVICE_ID_KEY, deviceId);
+    return deviceId;
+}
