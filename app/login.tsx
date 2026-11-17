@@ -62,7 +62,7 @@ async function navigatePostAuth(
 
 export default function Login() {
     const router = useRouter();
-    const { login, register, sessionExpired, clearSessionExpired, client, refreshSession } = useAuth();
+    const { login, register, sessionExpired, clearSessionExpired, client } = useAuth();
     const { loginWithGoogle, googleEnabled } = useGoogleAuth();
     const { loginWithApple, appleEnabled } = useAppleAuth();
     const colorScheme = useColorScheme();
@@ -145,8 +145,7 @@ export default function Login() {
         try {
             const result = await (provider === 'apple' ? loginWithApple() : loginWithGoogle());
             if (!result) return; // Apple cancellation is a silent no-op.
-            // Provider hooks store tokens; sync shell's AuthProvider state.
-            await refreshSession();
+            // Provider hooks hand the session to the shell and sign it in.
             if (result.onboardingCompleted) {
                 router.replace('/(drawer)/feed');
             } else {

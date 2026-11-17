@@ -81,3 +81,19 @@ export const secureStoreAdapter: TokenStorageAdapter = {
     setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
     removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
+
+/**
+ * Device id owned by wp-native-shell's auth stack (same key, UUID v4).
+ * Refresh tokens are bound to the device id and the shell refreshes with this
+ * one, so Google/Apple sign-in must send it. Used when the installed shell
+ * doesn't expose useAuth().getDeviceId().
+ */
+const SHELL_DEVICE_ID_KEY = 'wp_native_device_id';
+
+export async function getShellDeviceId(): Promise<string> {
+    const existing = await secureStoreAdapter.getItem(SHELL_DEVICE_ID_KEY);
+    if (existing) return existing;
+    const deviceId = Crypto.randomUUID();
+    await secureStoreAdapter.setItem(SHELL_DEVICE_ID_KEY, deviceId);
+    return deviceId;
+}

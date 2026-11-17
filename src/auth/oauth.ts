@@ -8,13 +8,16 @@ import { buildAppleLoginRequest, hashAppleNonce, withAppleCancellation } from '.
 import type { OAuthConfigResponse, OnboardingStatusResponse, ECStoredTokens } from '../types/oauth';
 import { ECRestClient } from './ec-rest-client';
 import { useAuth } from 'wp-native-shell';
-import { storeTokens, getTokens, clearTokens, getDeviceId } from './storage';
+import { storeTokens, getTokens, clearTokens, getShellDeviceId } from './storage';
+import { installSocialSession, shellDeviceId, type ShellAuthLike } from './social-session';
 
 // EC-specific OAuth routes that aren't wp-native abilities.
 
+// Its token store is legacy: provider sign-in sessions go to the shell
+// (installSocialSession), which is where the app reads them.
 const ecClient = new ECRestClient({
     baseUrl: 'https://extrachill.com/wp-json',
-    getDeviceId,
+    getDeviceId: getShellDeviceId,
     defaultHeaders: { 'ExtraChill-Client': 'app' },
 
     loadTokens: async (): Promise<ECStoredTokens | null> => {
@@ -62,13 +65,6 @@ function useOAuthConfig(): OAuthConfigResponse | null {
         return () => { cancelled = true; };
     }, []);
     return config;
-}
-
-/**
- * Parse an access_expires_at ISO string into a Unix timestamp (seconds).
- */
-function parseExpiresAt(expiresAt: string): number {
-    return Math.floor(new Date(expiresAt).getTime() / 1000);
 }
 
 /**
@@ -133,14 +129,14 @@ export interface GoogleAuthActions {
  * Fetches OAuth config on mount and exposes loginWithGoogle().
  * The config fetch is fire-and-forget — failures silently disable Google.
  *
- * After loginWithGoogle() resolves, tokens are stored via the transport.
- * The caller must trigger an auth state refresh (e.g. via useAuth().refreshUser())
- * to update the AuthProvider's state.
+ * When loginWithGoogle() resolves, the session is installed in the shell's
+ * transport and the shell's auth state is signed in (installSocialSession).
  */
 export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
     const config = useOAuthConfig();
     const googleEnabled = config?.google.enabled ?? false;
-    const { client } = useAuth();
+    const auth = useAuth() as ShellAuthLike & ReturnType<typeof useAuth>;
+    const { client } = auth;
 
     const loginWithGoogle = useCallback(async (): Promise<{ onboardingCompleted: boolean }> => {
         if (!oauthConfigCache) {
@@ -165,7 +161,7 @@ export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
                 throw new Error('No ID token received from Google');
             }
 
-            const deviceId = await getDeviceId();
+            const deviceId = await shellDeviceId(auth, getShellDeviceId);
             const authResponse = await ecClient.loginWithGoogle({
                 id_token: idToken,
                 device_id: deviceId,
@@ -173,11 +169,7 @@ export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
                 registration_method: 'google',
             });
 
-            await ecClient.setTokens({
-                accessToken: authResponse.access_token,
-                refreshToken: authResponse.refresh_token,
-                accessExpiresAt: parseExpiresAt(authResponse.access_expires_at),
-            });
+            await installSocialSession(auth, authResponse);
 
             const onboardingStatus = await client.execute<OnboardingStatusResponse>(
                 'extrachill/get-onboarding-status',
@@ -199,13 +191,14 @@ export function useGoogleAuth(): GoogleAuthState & GoogleAuthActions {
             }
             throw error;
         }
-    }, [client]);
+    }, [auth, client]);
 
     return { googleEnabled, loginWithGoogle };
 }
 
 export function useAppleAuth() {
     const config = useOAuthConfig();
+    const auth = useAuth() as ShellAuthLike & ReturnType<typeof useAuth>;
     const [available, setAvailable] = useState(false);
 
     useEffect(() => {
@@ -237,16 +230,12 @@ export function useAppleAuth() {
                 nonce,
             });
             const response = await ecClient.loginWithApple(buildAppleLoginRequest(
-                credential, rawNonce, await getDeviceId(),
+                credential, rawNonce, await shellDeviceId(auth, getShellDeviceId),
             ));
-            await ecClient.setTokens({
-                accessToken: response.access_token,
-                refreshToken: response.refresh_token,
-                accessExpiresAt: parseExpiresAt(response.access_expires_at),
-            });
+            await installSocialSession(auth, response);
             return { onboardingCompleted: response.onboarding_completed };
         });
-    }, [appleEnabled]);
+    }, [appleEnabled, auth]);
 
     return { appleEnabled, loginWithApple };
 }
