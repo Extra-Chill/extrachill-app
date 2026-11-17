@@ -23,11 +23,11 @@ All continuation goes through `continueTwoFactorSignIn(transport, token, respons
 
 Continuations are bound to device and client, so Google/Apple sign-in now sends the shell's device id (`getShellDeviceId()`) and the `WP-Native-Client` header.
 
-Outcomes (`signInReducer` in `src/two-factor/model.js`): wrong code (401) stays on the step, clears the code, and adopts a rotated `data.continuation_token` if sent; 429 counts down from `data.retry_after` (30s if the transport drops it); 403 password reset required explains the emailed reset link and returns to sign-in; expired/invalid/exhausted continuation returns to sign-in with "Your sign-in timed out".
+Outcomes (`signInReducer` in `src/two-factor/model.js`): wrong code (401) stays on the step, clears the code, and adopts a rotated `data.continuation_token` if sent; 429 counts down from `data.retry_after`; 403 password reset required explains the emailed reset link and returns to sign-in; expired/invalid/exhausted continuation returns to sign-in with "Your sign-in timed out".
 
 ## Settings → Security
 
-`SecuritySettings` (in You → Account settings) uses the Two Factor REST routes through the shell's bearer transport:
+`SecuritySettings` (in You → Account settings) uses the Two Factor REST routes through the shell client's public authenticated `client.request()` (bearer, refresh, 401 retry; errors keep WordPress `data`):
 
 | UI | Route |
 | --- | --- |
@@ -38,6 +38,15 @@ Outcomes (`signInReducer` in `src/two-factor/model.js`): wrong code (401) stays 
 | Confirm it's you | `POST two-factor/1.0/revalidate` (`{}` → methods, `{ provider, resend: true }`, `{ provider, code }`) |
 
 Any change that fails with `revalidation_required` opens the Confirm it's you sheet and retries the original change once (`runWithRevalidation`). Turning off the last real method also turns off backup codes, so they never stand alone. No QR code is drawn: the member is on the phone that runs the authenticator, so the deep link and the copyable key replace scanning (and avoid a QR dependency).
+
+## Client versions
+
+WordPress error `data` (`retry_after`, rotated `continuation_token`, `revalidation`) and `client.request()` come from wp-native-client (Extra-Chill/wp-native#122 / #123). The app feature-detects both, so it also runs on the installed `wp-native-client@0.1.0`:
+
+- `shellRestRequester` uses `client.request()` when it exists, and otherwise falls back to the client's TypeScript-private `transport`.
+- On the verify path (shell `continueLogin`), the installed client drops error `data`. A 429 then counts down a fixed `DEFAULT_RETRY_SECONDS` (30), and a rotated continuation can't be adopted. Newer clients pass `data` through. The raw resend path always keeps `data`.
+
+Both fallbacks stop being used once `package.json` takes a wp-native-client release that includes #123. Caret ranges on 0.x don't cross minors, so the range has to be raised by hand.
 
 ## Dependencies (not live yet)
 

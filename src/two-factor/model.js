@@ -2,6 +2,12 @@
 // error classification, and Security settings transitions. No React Native.
 
 export const TWO_FACTOR_CHALLENGE = 'two_factor';
+/**
+ * Countdown used only when a 429 arrives without `data.retry_after`: the
+ * installed wp-native-client (< the release with ApiError.data) drops WordPress
+ * error data on the shell's verify path. Clients that keep `data` count down
+ * from the server's retry_after instead.
+ */
 export const DEFAULT_RETRY_SECONDS = 30;
 export const MAX_CODE_LENGTH = 12;
 

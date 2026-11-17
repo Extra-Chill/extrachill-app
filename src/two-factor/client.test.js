@@ -12,6 +12,14 @@ async function loadTS(file) {
     return import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
 }
 const client = await loadTS('./client.ts');
+const { classifyContinueError, DEFAULT_RETRY_SECONDS } = await import('./model.js');
+
+/** Error shaped like wp-native-client's ApiError (with `data` on newer clients). */
+function apiError(message, code, status, data) {
+    const error = Object.assign(new Error(message), { name: 'ApiError', code, status });
+    if (data !== undefined) error.data = data;
+    return error;
+}
 const {
     TwoFactorRequestError, continueTwoFactorSignIn, createContinueRequest, createShellSignInTransport,
     isRevalidationRequired, isRouteMissing, runWithRevalidation, shellRestRequester,
@@ -124,7 +132,7 @@ test('feature detection: 404 / rest_no_route hides Security controls', () => {
     assert.equal(isRouteMissing(new Error('offline')), false);
 });
 
-test('shellRestRequester uses the authenticated shell transport, or reports missing routes', async () => {
+test('shellRestRequester falls back to the transport on clients without request(), or reports missing routes', async () => {
     const seen = [];
     const fakeClient = { transport: { request: async (req) => { seen.push(req); return { user_id: 7 }; } } };
     const request = shellRestRequester(fakeClient);
@@ -160,4 +168,58 @@ test('runWithRevalidation: dismissed sheet resolves undefined; other errors and 
     const other = Object.assign(new Error('nope'), { status: 400, code: 'invalid_key_code' });
     await assert.rejects(runWithRevalidation(async () => { throw other; }, async () => assert.fail('no sheet')), other);
     await assert.rejects(runWithRevalidation(async () => { throw revalidate(); }, async () => true), { code: 'revalidation_required' });
+});
+
+test('shellRestRequester prefers the public client.request() and never touches the transport', async () => {
+    const seen = [];
+    const publicClient = {
+        transport: { request: async () => assert.fail('private transport must not be used') },
+        marker: 'bound',
+        async request(req) { seen.push({ req, self: this.marker }); return { user_id: 7 }; },
+    };
+    const request = shellRestRequester(publicClient);
+    assert.deepEqual(await getProviderSettings(request, 7), { user_id: 7 });
+    await updateProviderSettings(request, 7, { enabled_providers: ['Two_Factor_Totp'], primary_provider: 'Two_Factor_Totp' });
+    assert.deepEqual(seen, [
+        { req: { path: 'two-factor/1.0/users/7/providers', method: 'GET' }, self: 'bound' },
+        { req: { path: 'two-factor/1.0/users/7/providers', method: 'POST', body: { enabled_providers: ['Two_Factor_Totp'], primary_provider: 'Two_Factor_Totp' } }, self: 'bound' },
+    ]);
+});
+
+test('public request() errors keep WordPress data, so revalidation and 404 detection work', async () => {
+    const revalidate = apiError('Confirm it is you.', 'rest_forbidden_context', 403, {
+        status: 403, revalidation: { required: true, rest_route: '/two-factor/1.0/revalidate' },
+    });
+    const missing = apiError('No route was found matching the URL and request method.', 'rest_no_route', 404, { status: 404 });
+    let next = revalidate;
+    const request = shellRestRequester({ async request() { throw next; } });
+    await assert.rejects(getProviderSettings(request, 7), (error) => isRevalidationRequired(error));
+    next = missing;
+    await assert.rejects(getProviderSettings(request, 7), (error) => isRouteMissing(error));
+});
+
+test('verify through continueLogin: newer clients give retry_after and a rotated continuation', async () => {
+    let failure = apiError('Please wait before trying again.', 'two_factor_too_fast', 429, { status: 429, retry_after: 12 });
+    const transport = createShellSignInTransport({ continueLogin: async () => { throw failure; }, continueRequest: async () => null });
+    const classify = async () => {
+        try {
+            await continueTwoFactorSignIn(transport, 'cont-1', { provider: 'Two_Factor_Totp', code: '123456' });
+        } catch (error) {
+            return classifyContinueError(error);
+        }
+        return assert.fail('verify should have failed');
+    };
+    assert.deepEqual(await classify(), { kind: 'rate_limited', retryAfter: 12, rotated: null });
+
+    failure = apiError('Invalid code.', 'two_factor_invalid', 401, {
+        status: 401, continuation_token: 'cont-2', continuation_expires_at: '2026-01-01T00:20:00Z',
+    });
+    assert.deepEqual(await classify(), {
+        kind: 'invalid',
+        rotated: { continuationToken: 'cont-2', expiresAt: Date.parse('2026-01-01T00:20:00Z') },
+    });
+
+    // Installed client (no ApiError.data): the countdown falls back.
+    failure = apiError('Please wait before trying again.', 'two_factor_too_fast', 429);
+    assert.deepEqual(await classify(), { kind: 'rate_limited', retryAfter: DEFAULT_RETRY_SECONDS, rotated: null });
 });

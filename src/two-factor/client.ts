@@ -7,7 +7,7 @@
  *
  * Settings: thin wrappers over the Two Factor REST namespace
  * (`/two-factor/1.0/...`, WordPress/two-factor#935 and #1045), called through
- * the shell's bearer-authenticated transport.
+ * the shell client's public authenticated `request()`.
  *
  * This module has no runtime imports so node:test can load it directly.
  */
@@ -165,13 +165,30 @@ export function createShellSignInTransport(options: {
 export interface RestRequest { path: string; method: 'GET' | 'POST' | 'DELETE'; body?: Record<string, unknown> }
 export type RestRequester = <T>(request: RestRequest) => Promise<T>;
 
+type PublicRequest = <T>(request: { path: string; method: RestRequest['method']; body?: Record<string, unknown> }) => Promise<T>;
+type LegacyTransport = { request?: <T>(req: RestRequest) => Promise<T> };
+
 /**
- * Bearer-authenticated requests through the shell's transport (token refresh
- * and 401 retry included). wp-native-client has no public raw-REST method yet,
- * so this reaches the client's transport; it fails loudly if that changes.
+ * Bearer-authenticated requests through the shell's client: bearer token,
+ * proactive refresh and refresh-and-retry on 401.
+ *
+ * Uses the public `client.request()` (wp-native-client >= 0.2), whose errors
+ * keep WordPress's `code`, `status` and `data` (e.g. `revalidation`). Older
+ * clients have no public method, so this falls back to the client's
+ * TypeScript-private `transport`; if neither exists the Security section is
+ * hidden (reported as a missing route).
  */
 export function shellRestRequester(client: WPNativeClient): RestRequester {
-    const transport = (client as unknown as { transport?: { request?: <T>(req: RestRequest) => Promise<T> } }).transport;
+    const candidate = client as unknown as { request?: unknown; transport?: LegacyTransport } | null;
+    if (candidate && typeof candidate.request === 'function') {
+        const publicRequest = (candidate.request as PublicRequest).bind(client);
+        return <T>(request: RestRequest) => publicRequest<T>({
+            path: request.path,
+            method: request.method,
+            ...(request.body !== undefined ? { body: request.body } : {}),
+        });
+    }
+    const transport = candidate?.transport;
     if (!transport || typeof transport.request !== 'function') {
         return () => Promise.reject(new TwoFactorRequestError('Two-step sign-in settings are unavailable.', 404, 'rest_no_route'));
     }
