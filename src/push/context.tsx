@@ -5,6 +5,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { useRouter } from 'expo-router';
 import { useAuth, useBrowserHandoff, useTheme } from 'wp-native-shell';
+import { ticketCache } from '../tickets/cache';
 import { createPushLifecycle, openPush, type PushLifecycle } from './model';
 
 type Notifications = typeof import('expo-notifications');
@@ -18,7 +19,11 @@ function supported() {
 }
 
 export function PushProvider({ children }: { children: ReactNode }) {
-    const { client, isAuthenticated, logout } = useAuth();
+    const { client, user, isAuthenticated, logout } = useAuth();
+    useEffect(() => {
+        void ticketCache.setUser(user?.id ?? null).catch(error => console.warn('Ticket cache cleanup failed', error));
+        return () => { void ticketCache.setUser(null).catch(() => {}); };
+    }, [user?.id]);
     const theme = useTheme();
     const panel = { padding: theme.spacing.md, backgroundColor: theme.colors.surface, borderTopWidth: 1, borderTopColor: theme.colors.border };
     const text = { color: theme.colors.text };
@@ -90,6 +95,7 @@ export function PushProvider({ children }: { children: ReactNode }) {
     async function signOut() {
         try { await lifecycle.current?.unregister(); }
         catch (error) { console.warn('Push unregister failed; continuing sign out', error); }
+        await ticketCache.setUser(null).catch(error => console.warn('Ticket cache cleanup failed', error));
         await logout();
     }
     return <LogoutContext.Provider value={signOut}>
