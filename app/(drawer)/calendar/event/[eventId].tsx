@@ -10,6 +10,7 @@ import { CanonicalButton, CommunityHeader, StatePanel, communityStyles as styles
 import { ShowRating, useShowRatings } from '../../../../src/show-ratings/components';
 import { canRateShow } from '../../../../src/show-ratings/model';
 import { communityError, plainText } from '../../../../src/community/model';
+import { EventTickets } from '../../../../src/tickets/EventTickets';
 import { venueIdentifier } from '../../../../src/venues/model';
 
 export default function EventDetail() {
@@ -121,7 +122,7 @@ export default function EventDetail() {
                     {event.performer?.name ? <Text style={[styles.body, text]}>{event.performer.name}</Text> : !event.content_html ? <Text style={[styles.body, text]}>Lineup and full description are available on the event website.</Text> : null}
                     {event.content_html ? <Text style={[styles.body, text]}>{plainText(event.content_html)}</Text> : null}
                     {currentDetail?.error ? <StatePanel message={currentDetail.error.message} actionLabel="Try again" onAction={() => void loadDetail()} /> : null}
-                    {ticket ? <CanonicalButton label="Tickets" onPress={() => void open(ticket)} /> : null}
+                    <EventTickets eventId={id} legacyURL={ticket} open={url => void open(url)} />
                     {permalink ? <CanonicalButton label="Open event on web" onPress={() => void open(permalink)} /> : null}
                     {attendance ? <Text style={[styles.body, text]}>{attendance.count} going</Text> : null}
                     {user && attendance ? <Pressable accessibilityRole="button" accessibilityState={{ selected: attendance.user_marked, disabled: sending || loading }} disabled={sending || loading} onPress={() => void toggle()} style={[styles.button, { backgroundColor: theme.colors.primary }]}>

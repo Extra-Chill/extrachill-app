@@ -64,6 +64,7 @@ export default function YouHome() {
             <Button onPress={() => router.push('/you/edit')}>Edit profile</Button>
             <Button variant="tertiary" onPress={() => router.push('/you/settings')}>Account settings</Button>
             <MyArtists />
+            <Button variant="tertiary" onPress={() => router.push('/you/tickets')}>My tickets</Button>
             <SectionHeading>My Shows</SectionHeading>
             <Button variant={period === 'upcoming' ? 'primary' : 'tertiary'} onPress={() => setPeriod('upcoming')}>Upcoming</Button>
             <Button variant={period === 'past' ? 'primary' : 'tertiary'} onPress={() => setPeriod('past')}>Past</Button>
